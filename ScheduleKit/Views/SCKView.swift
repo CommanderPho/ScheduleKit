@@ -76,10 +76,24 @@ import Cocoa
 
     /// The schedule view's delegate.
     @objc public weak var delegate: SCKViewDelegate?
-    public weak var colorManagingDelegate: SCKColorManaging?
-    public weak var labelManagingDelegate: SCKLabelManaging?
-    public weak var layoutManagingDelegate: SCKLayoutManaging?
-    
+    public weak var colorManagingDelegate: SCKColorManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    public weak var labelManagingDelegate: SCKLabelManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    public weak var layoutManagingDelegate: SCKLayoutManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
     // MARK: - NSView overrides
 
     override open var isFlipped: Bool {

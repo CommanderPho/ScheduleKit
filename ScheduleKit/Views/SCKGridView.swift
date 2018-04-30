@@ -64,10 +64,12 @@ import Cocoa
 ///
 public class SCKGridView: SCKView {
 //
-    
+
+
+
     var Constants: SCKLayoutConstants {
         guard let validLayoutDelegate = self.layoutManagingDelegate else {
-            return SCKLayoutConstants(DayAreaHeight: 40.0, DayAreaMarginBottom: 20.0, MaxHeightPerHour: 300.0, HourAreaWidth: 56.0)
+            return SCKLayoutConstants(DayAreaHeight: 40.0, DayAreaMarginBottom: 40.0, MaxHeightPerHour: 300.0, HourAreaWidth: 56.0)
         }
         return validLayoutDelegate.layoutConstants
     }
@@ -87,6 +89,25 @@ public class SCKGridView: SCKView {
     override public weak var delegate: SCKViewDelegate? {
         didSet {
             readDefaultsFromDelegate()
+        }
+    }
+
+    override public weak var colorManagingDelegate: SCKColorManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    override public weak var labelManagingDelegate: SCKLabelManaging? {
+        didSet {
+            self.setUp()
+            self.resetLabels(andConfigure: true)
+        }
+    }
+
+    override public weak var layoutManagingDelegate: SCKLayoutManaging? {
+        didSet {
+            self.setUp()
         }
     }
 
@@ -158,6 +179,49 @@ public class SCKGridView: SCKView {
         label.sizeToFit() // Needed
         return label
     }
+
+
+
+    func resetHourLabels(andConfigure shouldConfigure: Bool) {
+        // Remove all hour and minute labels
+        for (hour, label) in self.hourLabels {
+            let shouldBeInstalled = false
+            if label.superview != nil && !shouldBeInstalled {
+                label.removeFromSuperview()
+                for min in [10, 15, 20, 30, 40, 45, 50] {
+                    hourLabels[min*10+hour]?.removeFromSuperview()
+                }
+            }
+        }
+        self.hourLabels.removeAll(keepingCapacity: true)
+        if (shouldConfigure) {
+            self.configureHourLabels()
+        }
+    }
+
+    func resetDayLabels(andConfigure shouldConfigure: Bool) {
+        //Remove all Day and Month labels
+        for (day, dayLabel) in dayLabels.enumerated() {
+            if dayLabel.superview != nil {
+                dayLabel.removeFromSuperview()
+                self.monthLabels[day].removeFromSuperview()
+            }
+        }
+        self.dayLabels.removeAll(keepingCapacity: true)
+        self.monthLabels.removeAll(keepingCapacity: true)
+        if (shouldConfigure) {
+            self.configureDayLabels()
+        }
+
+    }
+
+    func resetLabels(andConfigure shouldConfigure: Bool) {
+        self.resetDayLabels(andConfigure: shouldConfigure)
+        self.resetHourLabels(andConfigure: shouldConfigure)
+    }
+
+
+
 
     // MARK: Day and month labels
 
@@ -399,11 +463,14 @@ public class SCKGridView: SCKView {
     }
 
     public override func layout() {
-        super.layout(); let canvas = contentRect
+        super.layout();
+        let canvas = contentRect
         guard dayCount > 0 else { return } // View is not ready
 
         // Layout day labels
-        let marginLeft = Constants.HourAreaWidth
+
+        let marginLeft = self.Constants.paddingLeft
+
         let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
         let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
 
@@ -455,7 +522,7 @@ public class SCKGridView: SCKView {
 
     public override func resize(withOldSuperviewSize oldSize: NSSize) {
         super.resize(withOldSuperviewSize: oldSize) // Triggers layout. Try to acommodate hour height.
-        let visibleHeight = superview!.frame.height - Constants.paddingTop
+        let visibleHeight = superview!.frame.height - (Constants.paddingTop + Constants.paddingBottom)
         let contentHeight = CGFloat(hourCount) * hourHeight
         if contentHeight < visibleHeight && hourCount > 0 {
             hourHeight = visibleHeight / CGFloat(hourCount)
@@ -509,6 +576,17 @@ public class SCKGridView: SCKView {
         let start = delegate.dayStartHour(for: self)
         var end = delegate.dayEndHour(for: self)
         if end == 0 { end = 24 }
+
+        if let layoutDelegate = self.layoutManagingDelegate {
+
+        }
+        if let labelDelegate = self.labelManagingDelegate {
+
+        }
+        if let colorDelegate = self.colorManagingDelegate {
+
+        }
+
         dayStartPoint = SCKDayPoint(hour: start, minute: 0, second: 0)
         dayEndPoint = SCKDayPoint(hour: end, minute: 0, second: 0)
         updateHourParameters()
