@@ -234,6 +234,17 @@ public class SCKGridView: SCKView {
     /// A container view for day labels. Pinned at the top of the scroll view.
     private let dayLabelingView = NSView(frame: .zero)
 
+    public func getDayLabelingView() -> NSView {
+        return self.dayLabelingView
+    }
+
+    public func getTopLabels() -> (day: [NSTextField], month: [NSTextField]) {
+        return (self.dayLabels, self.monthLabels)
+    }
+
+
+
+
     /// A date formatter for day labels.
     private var dayLabelsDateFormatter: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "EEEE d"; return f
@@ -534,7 +545,9 @@ public class SCKGridView: SCKView {
         let height = Constants.DayAreaHeight
         if let parent = newSuperview?.superview?.superview {
             dayLabelingView.translatesAutoresizingMaskIntoConstraints = false
-            parent.addSubview(dayLabelingView, positioned: .above, relativeTo: nil)
+            //parent.addSubview(dayLabelingView, positioned: .above, relativeTo: nil)
+            parent.addSubview(dayLabelingView, positioned: .above, relativeTo: self)
+
             if let validColorDelegate = self.colorManagingDelegate {
                 dayLabelingView.layer?.backgroundColor = validColorDelegate.dayLabelingViewBackgroundColor.cgColor
             }
