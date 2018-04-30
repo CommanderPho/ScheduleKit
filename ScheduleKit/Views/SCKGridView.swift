@@ -470,7 +470,6 @@ public class SCKGridView: SCKView {
         // Layout day labels
 
         let marginLeft = self.Constants.paddingLeft
-
         let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
         let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
 
