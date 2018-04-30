@@ -64,6 +64,8 @@
 		99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */; };
 		99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */; };
 		99F4DDEC1E5DAF9F00D7A161 /* SCKEventRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */; };
+		D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */; };
+		D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -183,6 +185,8 @@
 		99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKDayView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKWeekView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCKEventRequestTests.swift; sourceTree = "<group>"; };
+		D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKColorManaging.swift; sourceTree = "<group>"; };
+		D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLabelManaging.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -270,6 +274,8 @@
 		9982601D1DDAF0B300C46586 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
+				D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */,
 				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
 				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
 				999950901D8EB56D00128669 /* SCKEventRequest.swift */,
@@ -648,6 +654,7 @@
 				99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */,
 				99BA3AC11DBF73DF00A6FB33 /* SCKDayPoint.swift in Sources */,
 				99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */,
+				D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */,
 				9982601F1DDB3DAD00C46586 /* SCKEventManaging.swift in Sources */,
 				9997172A1DC3784A009BB046 /* SCKGridView.swift in Sources */,
 				999950971D8EE25A00128669 /* SCKEventView.swift in Sources */,
@@ -660,6 +667,7 @@
 				99CAFCF51DCA039F004502AA /* SCKViewController.swift in Sources */,
 				99B577DC1DC61A870010A6A5 /* SCKTextField.swift in Sources */,
 				9932BD681DFD643E002ED213 /* SCKFreeTimeFinder.swift in Sources */,
+				D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

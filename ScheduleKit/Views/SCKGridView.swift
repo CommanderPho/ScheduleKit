@@ -72,6 +72,14 @@ public class SCKGridView: SCKView {
         static var paddingTop: CGFloat { return DayAreaHeight + DayAreaMarginBottom }
     }
 
+
+
+    public var unavailableTimeRangesColor: NSColor { return self.colorManagingDelegate?.unavailableTimeRangesColor ?? NSColor(red: 0.925, green: 0.942, blue: 0.953, alpha: 1.0) }
+    public var dayDelimetersColor: NSColor { return self.colorManagingDelegate?.dayDelimetersColor ?? NSColor(deviceWhite: 0.95, alpha: 1.0) }
+    public var hourDelimetersColor: NSColor { return self.colorManagingDelegate?.hourDelimetersColor ?? NSColor(deviceWhite: 0.95, alpha: 1.0) }
+    public var currentTimeLineColor: NSColor { return self.colorManagingDelegate?.currentTimeLineColor ?? NSColor.red }
+
+
     override func setUp() {
         super.setUp()
         updateHourParameters()
@@ -185,9 +193,19 @@ public class SCKGridView: SCKView {
             if dayLabels.count > day { // Skip already created labels
                 continue
             }
-            dayLabels.append(label("", size: 14.0, color: .darkGray))
-            let monthLabel = label("", size: 12.0, color: .lightGray)
+            let dayLabel: NSTextField
+            let monthLabel: NSTextField
+
+            if let validLabelDelegate = self.labelManagingDelegate {
+                dayLabel = validLabelDelegate.getLabel(forLabelType: .day)
+                monthLabel = validLabelDelegate.getLabel(forLabelType: .month)
+            }
+            else {
+                dayLabel = label("", size: 14.0, color: .darkGray)
+                monthLabel = label("", size: 12.0, color: .lightGray)
+            }
             monthLabel.isHidden = true
+            dayLabels.append(dayLabel)
             monthLabels.append(monthLabel)
         }
 
@@ -238,9 +256,22 @@ public class SCKGridView: SCKView {
             if hourLabels[hour] != nil {
                 continue
             }
-            hourLabels[hour] = label("\(hour):00", size: 11, color: .darkGray)
+            let hourLabel: NSTextField
+            if let validLabelDelegate = self.labelManagingDelegate {
+                hourLabel = validLabelDelegate.getLabel(forLabelType: .hour(hourValue: hour))
+            }
+            else {
+                hourLabel = label("\(hour):00", size: 11, color: .darkGray)
+            }
+            hourLabels[hour] = hourLabel
             for min in [10, 15, 20, 30, 40, 45, 50] {
-                let mLabel = label("\(hour):\(min)  -", size: 10, color: .lightGray)
+                let mLabel: NSTextField
+                if let validLabelDelegate = self.labelManagingDelegate {
+                    mLabel = validLabelDelegate.getLabel(forLabelType: .min(hourValue: hour, minValue: min))
+                }
+                else {
+                    mLabel = label("\(hour):\(min)  -", size: 10, color: .lightGray)
+                }
                 mLabel.isHidden = true
                 hourLabels[hour+min*10] = mLabel
             }
@@ -530,7 +561,7 @@ public class SCKGridView: SCKView {
     }
 
     private func drawUnavailableTimeRanges() {
-        NSColor(red: 0.925, green: 0.942, blue: 0.953, alpha: 1.0).set()
+        self.unavailableTimeRangesColor.set()
         unavailableTimeRanges.forEach { rectForUnavailableTimeRange($0).fill() }
     }
 
@@ -538,14 +569,15 @@ public class SCKGridView: SCKView {
         let canvas = CGRect(x: Constants.HourAreaWidth, y: Constants.DayAreaHeight,
                             width: frame.width-Constants.HourAreaWidth, height: frame.height-Constants.DayAreaHeight)
         let dayWidth = canvas.width / CGFloat(dayCount)
-        NSColor(deviceWhite: 0.95, alpha: 1.0).set()
+        self.dayDelimetersColor.set()
+        //NSColor(deviceWhite: 0.95, alpha: 1.0).set()
         for day in 0..<dayCount {
             CGRect(x: canvas.minX + CGFloat(day) * dayWidth, y: canvas.minY, width: 1.0, height: canvas.height).fill()
         }
     }
 
     private func drawHourDelimiters() {
-        NSColor(deviceWhite: 0.95, alpha: 1.0).set()
+        self.hourDelimetersColor.set()
         for hour in 0..<hourCount {
             CGRect(x: contentRect.minX-8.0, y: contentRect.minY + CGFloat(hour) * hourHeight - 0.4,
                            width: contentRect.width + 8.0, height: 1.0).fill()
@@ -558,7 +590,7 @@ public class SCKGridView: SCKView {
         let minuteCount = Double(hourCount) * 60.0
         let elapsedMinutes = Double(components.hour!-firstHour) * 60.0 + Double(components.minute!)
         let yOrigin = canvas.minY + canvas.height * CGFloat(elapsedMinutes / minuteCount)
-        NSColor.red.setFill()
+        self.currentTimeLineColor.setFill()
         CGRect(x: canvas.minX, y: yOrigin-0.25, width: canvas.width, height: 0.5).fill()
         NSBezierPath(ovalIn: CGRect(x: canvas.minX-2.0, y: yOrigin-2.0, width: 4.0, height: 4.0)).fill()
     }
@@ -641,7 +673,7 @@ extension SCKGridView {
     /// Increases or decreases the hour height property if greater than the minimum value and less than the maximum
     /// hour height. Marks the view as needing display.
     /// - Parameter targetHeight: The calculated new hour height.
-    private func processNewHourHeight(_ targetHeight: CGFloat) {
+    fileprivate func processNewHourHeight(_ targetHeight: CGFloat) {
         guard targetHeight < Constants.MaxHeightPerHour else {
             hourHeight = Constants.MaxHeightPerHour
             needsDisplay = true
@@ -654,5 +686,12 @@ extension SCKGridView {
             hourHeight = minimumContentHeight / CGFloat(hourCount)
         }
         needsDisplay = true
+    }
+}
+
+extension SCKGridView {
+
+    public func zoomOut() {
+        self.processNewHourHeight(-1000.0)
     }
 }
