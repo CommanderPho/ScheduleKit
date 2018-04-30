@@ -197,8 +197,8 @@ public class SCKGridView: SCKView {
             let monthLabel: NSTextField
 
             if let validLabelDelegate = self.labelManagingDelegate {
-                dayLabel = validLabelDelegate.getLabel(forLabelType: .day)
-                monthLabel = validLabelDelegate.getLabel(forLabelType: .month)
+                dayLabel = validLabelDelegate.getLabel(forLabelType: .day(date: nil))
+                monthLabel = validLabelDelegate.getLabel(forLabelType: .month(date: nil))
             }
             else {
                 dayLabel = label("", size: 14.0, color: .darkGray)
@@ -221,13 +221,27 @@ public class SCKGridView: SCKView {
                     dayLabelingView.addSubview(monthLabels[day])
                 }
                 let date = sharedCalendar.date(byAdding: .day, value: day, to: dateInterval.start)!
-                let text = dayLabelsDateFormatter.string(from: date).uppercased()
+                let text: String
+                if let validLabelDelegate = self.labelManagingDelegate {
+//                    text = validLabelDelegate.dayLabelsDateFormatter.string(from: date)
+                    text = validLabelDelegate.getLabelText(forLabelType: .day(date: date))
+                }
+                else {
+                    text = dayLabelsDateFormatter.string(from: date).uppercased()
+                }
                 dayLabel.stringValue = text
                 dayLabel.sizeToFit()
 
                 // Show month label if first day in week or first day in month.
                 if day == 0 || sharedCalendar.component(.day, from: date) == 1 {
-                    let monthText = monthLabelsDateFormatter.string(from: date)
+                    let monthText: String
+                    if let validLabelDelegate = self.labelManagingDelegate {
+//                        monthText = validLabelDelegate.monthLabelsDateFormatter.string(from: date)
+                        monthText = validLabelDelegate.getLabelText(forLabelType: .month(date: date))
+                    }
+                    else {
+                        monthText = monthLabelsDateFormatter.string(from: date)
+                    }
                     monthLabels[day].stringValue = monthText
                     monthLabels[day].sizeToFit()
                     monthLabels[day].isHidden = false
@@ -458,7 +472,13 @@ public class SCKGridView: SCKView {
         if let parent = newSuperview?.superview?.superview {
             dayLabelingView.translatesAutoresizingMaskIntoConstraints = false
             parent.addSubview(dayLabelingView, positioned: .above, relativeTo: nil)
-            dayLabelingView.layer?.backgroundColor = NSColor.white.cgColor
+            if let validColorDelegate = self.colorManagingDelegate {
+                dayLabelingView.layer?.backgroundColor = validColorDelegate.dayLabelingViewBackgroundColor.cgColor
+            }
+            else {
+                dayLabelingView.layer?.backgroundColor = NSColor.white.cgColor
+            }
+
             dayLabelingView.layer?.opacity = 0.95
             NSLayoutConstraint.activate([
                 dayLabelingView.leftAnchor.constraint(equalTo: parent.leftAnchor),

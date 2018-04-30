@@ -12,6 +12,8 @@ import Cocoa
 
 public protocol SCKColorManaging: class {
     var backgroundColor: NSColor {get}
+    var dayLabelingViewBackgroundColor: NSColor {get}
+
     var unavailableTimeRangesColor: NSColor {get}
     var dayDelimetersColor: NSColor {get}
     var hourDelimetersColor: NSColor {get}
@@ -21,7 +23,8 @@ public protocol SCKColorManaging: class {
 
 
 public extension SCKColorManaging {
-    var backgroundColor: NSColor { return NSColor.darkGray }
+    var backgroundColor: NSColor { return NSColor.white }
+    var dayLabelingViewBackgroundColor: NSColor { return NSColor.white }
     var unavailableTimeRangesColor: NSColor { return NSColor(red: 0.925, green: 0.942, blue: 0.953, alpha: 1.0) }
     var dayDelimetersColor: NSColor { return NSColor(deviceWhite: 0.95, alpha: 1.0) }
     var hourDelimetersColor: NSColor { return NSColor(deviceWhite: 0.95, alpha: 1.0) }

@@ -274,10 +274,6 @@
 		9982601D1DDAF0B300C46586 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
-				D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */,
-				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
-				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
 				999950901D8EB56D00128669 /* SCKEventRequest.swift */,
 				99CAFCF41DCA039F004502AA /* SCKViewController.swift */,
 				9932BD671DFD643E002ED213 /* SCKFreeTimeFinder.swift */,
@@ -348,6 +344,7 @@
 		99E7D0A31A4AF3B500713F18 /* ScheduleKit */ = {
 			isa = PBXGroup;
 			children = (
+				D79115822097057E0026DD1F /* Protocols */,
 				99E7D0A61A4AF3B500713F18 /* ScheduleKit.h */,
 				99BA3AC21DBF800E00A6FB33 /* BaseDefinitions.swift */,
 				99BA3ABE1DBF709C00A6FB33 /* SCKEvent.swift */,
@@ -394,6 +391,17 @@
 				999950941D8EB7CE00128669 /* SCKEventHolder.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		D79115822097057E0026DD1F /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
+				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
+				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
+				D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */,
+			);
+			name = Protocols;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
