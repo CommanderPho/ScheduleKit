@@ -78,7 +78,8 @@ import Cocoa
     @objc public weak var delegate: SCKViewDelegate?
     public weak var colorManagingDelegate: SCKColorManaging?
     public weak var labelManagingDelegate: SCKLabelManaging?
-
+    public weak var layoutManagingDelegate: SCKLayoutManaging?
+    
     // MARK: - NSView overrides
 
     override open var isFlipped: Bool {

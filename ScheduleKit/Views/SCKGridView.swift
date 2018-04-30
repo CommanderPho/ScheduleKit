@@ -63,15 +63,14 @@ import Cocoa
 /// - Note: Do not instantiate this class directly.
 ///
 public class SCKGridView: SCKView {
-
-    private struct Constants {
-        static let DayAreaHeight: CGFloat = 40.0
-        static let DayAreaMarginBottom: CGFloat = 20.0
-        static let MaxHeightPerHour: CGFloat = 300.0
-        static let HourAreaWidth: CGFloat = 56.0
-        static var paddingTop: CGFloat { return DayAreaHeight + DayAreaMarginBottom }
+//
+    
+    var Constants: SCKLayoutConstants {
+        guard let validLayoutDelegate = self.layoutManagingDelegate else {
+            return SCKLayoutConstants(DayAreaHeight: 40.0, DayAreaMarginBottom: 20.0, MaxHeightPerHour: 300.0, HourAreaWidth: 56.0)
+        }
+        return validLayoutDelegate.layoutConstants
     }
-
 
 
     public var unavailableTimeRangesColor: NSColor { return self.colorManagingDelegate?.unavailableTimeRangesColor ?? NSColor(red: 0.925, green: 0.942, blue: 0.953, alpha: 1.0) }
@@ -223,7 +222,6 @@ public class SCKGridView: SCKView {
                 let date = sharedCalendar.date(byAdding: .day, value: day, to: dateInterval.start)!
                 let text: String
                 if let validLabelDelegate = self.labelManagingDelegate {
-//                    text = validLabelDelegate.dayLabelsDateFormatter.string(from: date)
                     text = validLabelDelegate.getLabelText(forLabelType: .day(date: date))
                 }
                 else {
@@ -236,7 +234,6 @@ public class SCKGridView: SCKView {
                 if day == 0 || sharedCalendar.component(.day, from: date) == 1 {
                     let monthText: String
                     if let validLabelDelegate = self.labelManagingDelegate {
-//                        monthText = validLabelDelegate.monthLabelsDateFormatter.string(from: date)
                         monthText = validLabelDelegate.getLabelText(forLabelType: .month(date: date))
                     }
                     else {

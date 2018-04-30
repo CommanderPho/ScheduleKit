@@ -89,6 +89,7 @@ import AppKit
         let oldDelegate = scheduleView?.delegate
         let oldColorDelegate = scheduleView?.colorManagingDelegate
         let oldLabelDelegate = scheduleView?.labelManagingDelegate
+        let oldLayoutDelegate = scheduleView?.layoutManagingDelegate
         let f = CGRect(origin: CGPoint.zero, size: scrollView.contentSize)
         let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
         scrollView.documentView?.removeFromSuperview()
@@ -98,6 +99,7 @@ import AppKit
         sView.delegate = oldDelegate
         sView.colorManagingDelegate = oldColorDelegate
         sView.labelManagingDelegate = oldLabelDelegate
+        sView.layoutManagingDelegate = oldLayoutDelegate
         sView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = scheduleView
         let p = sView.superview!
