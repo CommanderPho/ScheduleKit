@@ -7,12 +7,12 @@
 		<key>SCKExample-ObjC.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>48</integer>
+			<integer>49</integer>
 		</dict>
 		<key>SCKExample-Swift.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>47</integer>
+			<integer>44</integer>
 		</dict>
 		<key>ScheduleKit.xcscheme_^#shared#^_</key>
 		<dict>
