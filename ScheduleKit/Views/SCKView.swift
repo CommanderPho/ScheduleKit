@@ -76,6 +76,23 @@ import Cocoa
 
     /// The schedule view's delegate.
     @objc public weak var delegate: SCKViewDelegate?
+    public weak var colorManagingDelegate: SCKColorManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    public weak var labelManagingDelegate: SCKLabelManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    public weak var layoutManagingDelegate: SCKLayoutManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
 
     // MARK: - NSView overrides
 
@@ -88,7 +105,12 @@ import Cocoa
     }
 
     public override func draw(_ dirtyRect: NSRect) {
-        NSColor.white.setFill()
+        if let validColorDelegate = self.colorManagingDelegate {
+            validColorDelegate.backgroundColor.setFill()
+        }
+        else {
+            NSColor.white.setFill()
+        }
         dirtyRect.fill()
     }
 

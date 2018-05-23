@@ -64,6 +64,9 @@
 		99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */; };
 		99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */; };
 		99F4DDEC1E5DAF9F00D7A161 /* SCKEventRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */; };
+		D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */; };
+		D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */; };
+		D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7911583209710E70026DD1F /* SCKLayoutManaging.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -183,6 +186,9 @@
 		99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKDayView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKWeekView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCKEventRequestTests.swift; sourceTree = "<group>"; };
+		D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKColorManaging.swift; sourceTree = "<group>"; };
+		D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLabelManaging.swift; sourceTree = "<group>"; };
+		D7911583209710E70026DD1F /* SCKLayoutManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLayoutManaging.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -270,8 +276,6 @@
 		9982601D1DDAF0B300C46586 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
-				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
 				999950901D8EB56D00128669 /* SCKEventRequest.swift */,
 				99CAFCF41DCA039F004502AA /* SCKViewController.swift */,
 				9932BD671DFD643E002ED213 /* SCKFreeTimeFinder.swift */,
@@ -342,6 +346,7 @@
 		99E7D0A31A4AF3B500713F18 /* ScheduleKit */ = {
 			isa = PBXGroup;
 			children = (
+				D79115822097057E0026DD1F /* Protocols */,
 				99E7D0A61A4AF3B500713F18 /* ScheduleKit.h */,
 				99BA3AC21DBF800E00A6FB33 /* BaseDefinitions.swift */,
 				99BA3ABE1DBF709C00A6FB33 /* SCKEvent.swift */,
@@ -388,6 +393,18 @@
 				999950941D8EB7CE00128669 /* SCKEventHolder.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		D79115822097057E0026DD1F /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
+				D7911583209710E70026DD1F /* SCKLayoutManaging.swift */,
+				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
+				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
+				D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */,
+			);
+			name = Protocols;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -491,25 +508,26 @@
 				TargetAttributes = {
 					992C110B1DEB54B200E156D0 = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = Q6R76RZ9Z8;
+						DevelopmentTeam = K7B7DK4EX4;
 						LastSwiftMigration = 0810;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 					998228511DDA684B0088B82F = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = Q6R76RZ9Z8;
+						DevelopmentTeam = K7B7DK4EX4;
 						ProvisioningStyle = Automatic;
 					};
 					99CAFCD11DC9EAC7004502AA = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = Q6R76RZ9Z8;
+						DevelopmentTeam = K7B7DK4EX4;
 						LastSwiftMigration = 0900;
 						ProvisioningStyle = Automatic;
 					};
 					99E7D0A01A4AF3B500713F18 = {
 						CreatedOnToolsVersion = 6.1.1;
-						DevelopmentTeam = Q6R76RZ9Z8;
+						DevelopmentTeam = K7B7DK4EX4;
 						LastSwiftMigration = 0900;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -647,11 +665,13 @@
 				99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */,
 				99BA3AC11DBF73DF00A6FB33 /* SCKDayPoint.swift in Sources */,
 				99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */,
+				D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */,
 				9982601F1DDB3DAD00C46586 /* SCKEventManaging.swift in Sources */,
 				9997172A1DC3784A009BB046 /* SCKGridView.swift in Sources */,
 				999950971D8EE25A00128669 /* SCKEventView.swift in Sources */,
 				99BA3AC31DBF800E00A6FB33 /* BaseDefinitions.swift in Sources */,
 				999950991D8F216600128669 /* SCKView.swift in Sources */,
+				D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */,
 				999950951D8EB7CE00128669 /* SCKEventHolder.swift in Sources */,
 				999950911D8EB56D00128669 /* SCKEventRequest.swift in Sources */,
 				99BA3ABF1DBF709C00A6FB33 /* SCKEvent.swift in Sources */,
@@ -659,6 +679,7 @@
 				99CAFCF51DCA039F004502AA /* SCKViewController.swift in Sources */,
 				99B577DC1DC61A870010A6A5 /* SCKTextField.swift in Sources */,
 				9932BD681DFD643E002ED213 /* SCKFreeTimeFinder.swift in Sources */,
+				D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -709,14 +730,17 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = ScheduleKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gservera.ScheduleKitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
@@ -730,13 +754,16 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = ScheduleKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.gservera.ScheduleKitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
@@ -751,7 +778,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = "SCKExample-ObjC/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
@@ -770,7 +797,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = "SCKExample-ObjC/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
@@ -790,7 +817,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = "SCKExample-Swift/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
@@ -813,7 +840,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				INFOPLIST_FILE = "SCKExample-Swift/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
@@ -928,10 +955,11 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -942,6 +970,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gservera.ScheduleKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
@@ -953,10 +982,11 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = Q6R76RZ9Z8;
+				DEVELOPMENT_TEAM = K7B7DK4EX4;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -968,6 +998,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.gservera.ScheduleKit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
 			};
