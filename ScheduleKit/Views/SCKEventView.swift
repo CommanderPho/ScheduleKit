@@ -57,6 +57,7 @@ public final class SCKEventView: NSView {
     /// performance. Invalidated when the schedule view's color mode changes or
     /// when the event's user or user event color changes in .byEventOwner mode.
     internal var backgroundColor: NSColor?
+    internal var reducedEmphasisBackgroundColor: NSColor?
 
     public override func draw(_ dirtyRect: CGRect) {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
@@ -65,8 +66,20 @@ public final class SCKEventView: NSView {
         var fillColor: NSColor
 
         if isAnyViewSelected && !isThisViewSelected {
-            // Set color to gray when another event is selected
-            fillColor = NSColor(white: 0.85, alpha: 1.0)
+            // Set color to reducedEmphasisBackgroundColor when another event is selected
+            if reducedEmphasisBackgroundColor == nil {
+                switch scheduleView.colorMode {
+                case .byEventKind:
+                    let kind = eventHolder.representedObject.eventKind
+                    let color = scheduleView.delegate?.reducedEmphasisColor?(for: kind, in: scheduleView)
+                    reducedEmphasisBackgroundColor = color ?? scheduleView.defaultEventReducedEmphasisBackgroundColor
+                case .byEventOwner:
+                    let color = eventHolder.cachedUser?.reducedEmphasisEventColor
+                    reducedEmphasisBackgroundColor = color ?? scheduleView.defaultEventReducedEmphasisBackgroundColor
+                }
+            }
+            fillColor = reducedEmphasisBackgroundColor!
+
         } else {
             // No view selected or this view selected. Let's determine background
             // color.
@@ -75,10 +88,10 @@ public final class SCKEventView: NSView {
                 case .byEventKind:
                     let kind = eventHolder.representedObject.eventKind
                     let color = scheduleView.delegate?.color?(for: kind, in: scheduleView)
-                    backgroundColor = color ?? NSColor.darkGray
+                    backgroundColor = color ?? scheduleView.defaultEventBackgroundColor
                 case .byEventOwner:
                     let color = eventHolder.cachedUser?.eventColor
-                    backgroundColor = color ?? NSColor.darkGray
+                    backgroundColor = color ?? scheduleView.defaultEventBackgroundColor
                 }
             }
             fillColor = backgroundColor!

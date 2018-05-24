@@ -41,7 +41,21 @@ import Cocoa
     ///            background.
     @objc (colorForEventKind:inScheduleView:)
     optional func color(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
+
+    /// Implemented by a schedule view's delegate to provide different background
+    /// colors for the different event types when the view's color mode is set to
+    /// `.byEventKind` and the event is event is de-emphaiszed, meaning greyed
+    /// out from deselection
+    ///
+    /// - Parameters:
+    ///   - eventKindValue: The event kind for which to return a color.
+    ///   - scheduleView: The schedule view asking for the color.
+    /// - Returns: The color that will be used as the corresponding event view's
+    ///            background.
+    @objc (reducedEmphasisColorForEventKind:inScheduleView:)
+    optional func reducedEmphasisColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
 }
+
 
 /// An abstract NSView subclass that implements the basic functionality to manage
 /// a set of event views provided by an `SCKViewController` object. This class
@@ -64,6 +78,20 @@ import Cocoa
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setUp()
+    }
+
+
+    // Shared amongst all events in the case that the colors cannot be retrieved from the delegate
+    @objc public var defaultEventBackgroundColor: NSColor = NSColor.darkGray {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    @objc public var defaultEventReducedEmphasisBackgroundColor: NSColor = NSColor(white: 0.85, alpha: 1.0) {
+        didSet {
+            self.setUp()
+        }
     }
 
     /// This method is intended to provide a common initialization point for all 
@@ -309,6 +337,7 @@ import Cocoa
             if colorMode != oldValue {
                 for eventView in eventViews {
                     eventView.backgroundColor = nil
+                    eventView.reducedEmphasisBackgroundColor = nil
                     eventView.needsDisplay = true
                 }
             }

@@ -32,7 +32,14 @@ import Cocoa
     /// The color that will be used as `SCKEventView`s background when displayed
     /// in a `SCKView` with `colorMode` set to `.byEventOwner`.
     @objc var eventColor: NSColor { get }
+
+    /// The color that will be used as `SCKEventView`s background when displayed
+    /// in a `SCKView` with `colorMode` set to `.byEventOwner` and currently being reducedEmphasis because other events
+    /// are selected and it isn't.
+    @objc var reducedEmphasisEventColor: NSColor { get }
+
 }
+
 
 /// Any type implementing the properties required to define an event displayed in
 /// a `SCKView` subclass.
