@@ -36,6 +36,7 @@ public final class SCKEventView: NSView {
     internal var eventHolder: SCKEventHolder! {
         didSet {
             innerLabel.stringValue = eventHolder.cachedTitle
+            innerLabel.textColor = self.labelTextColor
         }
     }
 
@@ -73,13 +74,10 @@ public final class SCKEventView: NSView {
         }
     }
 
-
-    private func updateOverlayColor() {
+    private var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
         let isThisViewSelected = (scheduleView.selectedEventView == self)
-
         var currentOverlayColor: NSColor
-
         if isAnyViewSelected && !isThisViewSelected {
             // Set to reducedEmphasisOverlayColor when another event is selected
             if reducedEmphasisOverlayColor == nil {
@@ -110,7 +108,12 @@ public final class SCKEventView: NSView {
             }
             currentOverlayColor = overlayColor!
         }
-        self.innerLabel.textColor = currentOverlayColor
+        return currentOverlayColor
+    }
+
+
+    private func updateOverlayColor() {
+        self.innerLabel.textColor = self.labelTextColor
         self.innerLabel.setNeedsDisplay()
     }
 
