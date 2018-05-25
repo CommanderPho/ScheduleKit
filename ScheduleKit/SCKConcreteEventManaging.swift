@@ -59,8 +59,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     /// - Parameters:
     ///   - controller: The SCKViewController requesting events.
     ///   - request: The just created event request.
-    func scheduleController(_ controller: SCKViewController,
-                            didMakeConcreteEventRequest request: SCKConcreteEventRequest<EventType>)
+    func scheduleController(_ controller: SCKViewController, didMakeConcreteEventRequest request: SCKConcreteEventRequest<EventType>)
 
     // MARK: - Event selection
 
@@ -107,9 +106,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - oldValue: The current event's scheduled date in minutes.
     ///   - newValue: The proposed event's schaduled date in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfConcreteEvent event: EventType,
-                            from oldValue: Date, to newValue: Date) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfConcreteEvent event: EventType, from oldValue: Date, to newValue: Date) -> Bool
 
     // MARK: Contextual menu
 

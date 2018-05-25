@@ -108,9 +108,7 @@ public protocol SCKEventManaging: class {
     ///   - oldValue: The current event's duration in minutes.
     ///   - newValue: The proposed event's duration in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDurationOfEvent event: SCKEvent,
-                            from oldValue: Int, to newValue: Int) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDurationOfEvent event: SCKEvent, from oldValue: Int, to newValue: Int) -> Bool
 
     /// Implement this method to conditionally allow or deny a user-initiated
     /// date change in one of the events managed by a SCKViewController. If
@@ -122,9 +120,7 @@ public protocol SCKEventManaging: class {
     ///   - oldValue: The current event's scheduled date in minutes.
     ///   - newValue: The proposed event's schaduled date in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfEvent event: SCKEvent,
-                            from oldValue: Date, to newValue: Date) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfEvent event: SCKEvent, from oldValue: Date, to newValue: Date) -> Bool
 
     // MARK: Contextual menu
 
@@ -177,14 +173,11 @@ public extension SCKEventManaging {
         return true
     }
 
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfEvent event: SCKEvent,
-                            from oldValue: Date, to newValue: Date) -> Bool {
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfEvent event: SCKEvent, from oldValue: Date, to newValue: Date) -> Bool {
         return true
     }
 
-    func scheduleController(_ controller: SCKViewController,
-                            menuForEvent event: SCKEvent) -> NSMenu? {
+    func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu? {
         return nil
     }
 
