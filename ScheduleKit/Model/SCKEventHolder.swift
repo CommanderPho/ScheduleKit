@@ -120,7 +120,7 @@ internal final class SCKEventHolder: NSObject {
     /// The relative duration of the event in the `scheduleView` date bounds.
     internal var relativeLength = SCKRelativeTimeLengthInvalid
 
-    internal var timeSubindicatorConfig: TickSubinidcatorConfig? = nil
+    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil
 
     /// Indicates whether relative values are valid or not, thus if layout is safe.
     private(set) var isReady: Bool = false
@@ -168,11 +168,16 @@ internal final class SCKEventHolder: NSObject {
 
                 if let validTimeSubindicator = self.timeSubindicatorConfig {
                     self.timeSubindicatorConfig!.eventViewRelativeOffset = 0.0
+                    
                 }
                 else {
-//                    self.timeSubindicatorConfig = TickSubinidcatorConfig(thickness: 1.0, color: NSColor.red, height: 1.0, eventViewRelativeOffset: 0.0)
-                    self.timeSubindicatorConfig = TickSubinidcatorConfig(eventViewRelativeOffset: 0.0)
+//                    self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(thickness: 1.0, color: NSColor.red, height: 1.0, eventViewRelativeOffset: 0.0)
+                    self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(eventViewRelativeOffset: 0.0)
+
                 }
+
+                self.timeSubindicatorConfig!.thickness = 5.0
+                self.timeSubindicatorConfig!.color = NSColor.white
                 needsApplyTimeSubindicator = true
 
 
@@ -369,7 +374,7 @@ internal extension SCKEventHolder {
 
                 let conflictsNow = Set(strongSelf.controller!.resolvedConflicts(for: strongSelf))
                 let updatingHolders = strongSelf.previousConflicts.union(conflictsNow)
-                let updatingViews = updatingHolders.flatMap { $0.eventView }
+                let updatingViews = updatingHolders.compactMap { $0.eventView }
                 strongSelf.eventView?.scheduleView?.invalidateLayout(for: updatingViews)
             }
 
@@ -401,7 +406,7 @@ internal extension SCKEventHolder {
                 }
                 let conflictsNow = Set(strongSelf.controller!.resolvedConflicts(for: strongSelf))
                 let updatingHolders = strongSelf.previousConflicts.union(conflictsNow)
-                let updatingViews = updatingHolders.flatMap { $0.eventView }
+                let updatingViews = updatingHolders.compactMap { $0.eventView }
                 strongSelf.eventView?.scheduleView?.invalidateLayout(for: updatingViews)
             }
 

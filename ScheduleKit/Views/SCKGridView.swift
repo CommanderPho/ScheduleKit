@@ -447,6 +447,20 @@ public class SCKGridView: SCKView {
         return CGSize(width: NSView.noIntrinsicMetric, height: CGFloat(hourCount) * hourHeight + Constants.paddingTop)
     }
 
+    public var dayLabelsRect: CGRect? {
+        let canvas = contentRect
+        guard dayCount > 0 else { return nil } // View is not ready
+        let marginLeft = self.Constants.paddingLeft
+        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
+        return dayLabelsRect
+    }
+
+    public var dayWidth: CGFloat? {
+        guard let validDayLabelsRect = self.dayLabelsRect else { return nil }
+        let dayWidth = validDayLabelsRect.width / CGFloat(dayCount)
+        return dayWidth
+    }
+
     public override func layout() {
         super.layout();
         let canvas = contentRect
@@ -455,8 +469,10 @@ public class SCKGridView: SCKView {
         // Layout day labels
 
         let marginLeft = self.Constants.paddingLeft
-        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
-        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
+        let dayLabelsRect = self.dayLabelsRect!
+        let dayWidth = self.dayWidth!
+//        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
+//        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
 
         for day in 0..<dayCount {
             let minX = marginLeft + CGFloat(day) * dayWidth; let midY = Constants.DayAreaHeight/2.0
@@ -490,7 +506,7 @@ public class SCKGridView: SCKView {
         //MARK: -
         //MARK: - Layout events
         let offsetPerDay = 1.0/Double(dayCount)
-        for eventView in subviews.flatMap({ $0 as? SCKEventView }) where eventView.eventHolder.isReady {
+        for eventView in subviews.compactMap({ $0 as? SCKEventView }) where eventView.eventHolder.isReady {
             let holder = eventView.eventHolder!
             let day = Int(trunc(holder.relativeStart/offsetPerDay))
             let sPoint = SCKDayPoint(date: holder.cachedScheduledDate)
@@ -500,6 +516,7 @@ public class SCKGridView: SCKView {
             newFrame.origin.y = yFor(hour: sPoint.hour, minute: sPoint.minute)
             newFrame.size.height = yFor(hour: ePoint.hour, minute: ePoint.minute)-newFrame.minY
             newFrame.size.width = dayWidth / CGFloat(eventView.eventHolder.conflictCount)
+            // Divide the space allocated for conflicted events up evenly amongst all the events.
             newFrame.origin.x = canvas.minX + CGFloat(day) * dayWidth + newFrame.width * CGFloat(holder.conflictIndex)
             eventView.frame |= newFrame
         }

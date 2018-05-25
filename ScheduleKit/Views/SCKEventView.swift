@@ -26,17 +26,7 @@
 
 import Cocoa
 
-public struct TickSubinidcatorConfig {
-    var thickness: CGFloat = 2.2
-    var color: NSColor = NSColor.red
-    var height: CGFloat = 1.0
-    var eventViewRelativeOffset: CGFloat = 0.0
-    var shouldDisplay: Bool { return (self.eventViewRelativeOffset > 0.0) }
 
-    init(eventViewRelativeOffset: CGFloat = 0.0) {
-        self.eventViewRelativeOffset = 0.0
-    }
-}
 
 
 /// The view class used by ScheduleKit to display each event in a schedule view.
@@ -93,7 +83,7 @@ public struct TickSubinidcatorConfig {
         return true
     }
 
-    internal var timeSubindicatorConfig: TickSubinidcatorConfig? = nil {
+    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
         didSet {
             self.needsDisplay = true
         }
@@ -106,6 +96,7 @@ public struct TickSubinidcatorConfig {
         //let currentSize = self.frame.size
         let currentSize = dirtyRect.size
         let verticalOffset: CGFloat = currentSize.height * validConfig.eventViewRelativeOffset
+        let maxHorizontalOffset: CGFloat = currentSize.width * validConfig.height
 
         //Finalize Position, we move none on the x axis (drawing a vertical line)
         let startPointPosition: CGPoint = CGPoint(x: 0, y: verticalOffset)
@@ -114,11 +105,20 @@ public struct TickSubinidcatorConfig {
         let path = NSBezierPath.init()
 
         path.lineWidth = validConfig.thickness
+
         // move to starting point on line (defined origin)
         path.move(to: startPointPosition)
         // draw line of required length
         path.line(to: endPointPosition)
-        validConfig.color.setStroke()
+
+        let finalStrokeColor: NSColor
+        if let validColor = validConfig.color {
+            finalStrokeColor = validColor
+        }
+        else {
+            finalStrokeColor = self.overlayColor ?? self.scheduleView.defaultEventOverlayColor
+        }
+        finalStrokeColor.setStroke()
         path.stroke()
     }
 
