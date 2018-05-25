@@ -26,45 +26,6 @@
 
 import Cocoa
 
-/// An object conforming to the `SCKViewDelegate` protocol must implement a
-/// method required to set a color schedule view events.
-@objc public protocol SCKViewDelegate {
-
-    /// Implemented by a schedule view's delegate to provide different background
-    /// colors for the different event types when the view's color mode is set to
-    /// `.byEventKind`.
-    ///
-    /// - Parameters:
-    ///   - eventKindValue: The event kind for which to return a color.
-    ///   - scheduleView: The schedule view asking for the color.
-    /// - Returns: The color that will be used as the corresponding event view's
-    ///            background.
-    @objc (colorForEventKind:inScheduleView:)
-    optional func color(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
-
-    /// Implemented by a schedule view's delegate to provide different background
-    /// colors for the different event types when the view's color mode is set to
-    /// `.byEventKind` and the event is event is de-emphaiszed, meaning greyed
-    /// out from deselection
-    ///
-    /// - Parameters:
-    ///   - eventKindValue: The event kind for which to return a color.
-    ///   - scheduleView: The schedule view asking for the color.
-    /// - Returns: The color that will be used as the corresponding event view's
-    ///            background.
-    @objc (reducedEmphasisColorForEventKind:inScheduleView:)
-    optional func reducedEmphasisColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
-
-
-    @objc (overlayColorForEventKind:inScheduleView:)
-    optional func overlayColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
-
-    @objc (reducedEmphasisOverlayColorForEventKind:inScheduleView:)
-    optional func reducedEmphasisOverlayColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
-
-    
-}
-
 
 /// An abstract NSView subclass that implements the basic functionality to manage
 /// a set of event views provided by an `SCKViewController` object. This class
