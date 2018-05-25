@@ -139,6 +139,20 @@ public protocol SCKEventManaging: class {
     ///            event.
     func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu?
 
+
+    /// Implement this method to conditionally provide a customized view for
+    /// one or more events in a schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing a right clicked event.
+    ///   - event: The right clicked event.
+    /// - Returns: An SCKEventView subclassed object to will be displayed as the event view or
+    ///            `nil` if you want to use the default view for this particular
+    ///            event.
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView?
+
+    //@objc (viewForEventKind:inScheduleView:)
+    //optional func view(for eventKindValue: Int, in scheduleView: SCKView) -> SCKEventView
 }
 
 public extension SCKEventManaging {
@@ -173,4 +187,6 @@ public extension SCKEventManaging {
                             menuForEvent event: SCKEvent) -> NSMenu? {
         return nil
     }
+
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView? { return nil }
 }

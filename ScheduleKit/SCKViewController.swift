@@ -295,8 +295,20 @@ import AppKit
         }
 
         // Insert new events
-        for e in (eventsToBeInserted.flatMap { $0 as? SCKEvent }) {
-            let eventView = SCKEventView(frame: .zero)
+        for e in (eventsToBeInserted.compactMap { $0 as? SCKEvent }) {
+            let eventView: SCKEventView
+            if let validEventManager = self.eventManager {
+                if let validCustomEventView = validEventManager.scheduleController(self, viewForEvent: e) {
+                    eventView = validCustomEventView
+                }
+                else {
+                    fatalError()
+                }
+            }
+            else {
+                eventView = SCKEventView(frame: .zero)
+            }
+
             scheduleView.addSubview(eventView)
             scheduleView.addEventView(eventView)
             if let holder = SCKEventHolder(event: e, view: eventView, controller: self) {
