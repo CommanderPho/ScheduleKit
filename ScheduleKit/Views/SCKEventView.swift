@@ -26,6 +26,19 @@
 
 import Cocoa
 
+public struct TickSubinidcatorConfig {
+    var thickness: CGFloat = 2.2
+    var color: NSColor = NSColor.red
+    var height: CGFloat = 1.0
+    var eventViewRelativeOffset: CGFloat = 0.0
+    var shouldDisplay: Bool { return (self.eventViewRelativeOffset > 0.0) }
+
+    init(eventViewRelativeOffset: CGFloat = 0.0) {
+        self.eventViewRelativeOffset = 0.0
+    }
+}
+
+
 /// The view class used by ScheduleKit to display each event in a schedule view.
 /// This view is responsible of managing a descriptive label and also of handling
 /// mouse events, including drag and drop operations, which may derive in changes
@@ -73,6 +86,44 @@ import Cocoa
             self.updateOverlayColor()
         }
     }
+
+    internal var needsTimeSubindicatorLine: Bool {
+        guard let validConfig = self.timeSubindicatorConfig else { return false }
+//        return validConfig.shouldDisplay
+        return true
+    }
+
+    internal var timeSubindicatorConfig: TickSubinidcatorConfig? = nil {
+        didSet {
+            self.needsDisplay = true
+        }
+    }
+
+    //internal var timeSubindicatorLineConfig
+
+    private func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
+        guard let validConfig = self.timeSubindicatorConfig else { return }
+        //let currentSize = self.frame.size
+        let currentSize = dirtyRect.size
+        let verticalOffset: CGFloat = currentSize.height * validConfig.eventViewRelativeOffset
+
+        //Finalize Position, we move none on the x axis (drawing a vertical line)
+        let startPointPosition: CGPoint = CGPoint(x: 0, y: verticalOffset)
+        let endPointPosition: CGPoint = CGPoint(x: currentSize.width, y: verticalOffset)
+
+        let path = NSBezierPath.init()
+
+        path.lineWidth = validConfig.thickness
+        // move to starting point on line (defined origin)
+        path.move(to: startPointPosition)
+        // draw line of required length
+        path.line(to: endPointPosition)
+        validConfig.color.setStroke()
+        path.stroke()
+    }
+
+
+
 
     private var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
@@ -191,6 +242,10 @@ import Cocoa
                 fillColor.withAlphaComponent(0.2).setFill()
             }
             path.fill()
+        }
+
+        if (self.needsTimeSubindicatorLine) {
+            self.drawTimeSubindicatorLine(dirtyRect)
         }
     }
 

@@ -120,6 +120,8 @@ internal final class SCKEventHolder: NSObject {
     /// The relative duration of the event in the `scheduleView` date bounds.
     internal var relativeLength = SCKRelativeTimeLengthInvalid
 
+    internal var timeSubindicatorConfig: TickSubinidcatorConfig? = nil
+
     /// Indicates whether relative values are valid or not, thus if layout is safe.
     private(set) var isReady: Bool = false
 
@@ -140,6 +142,7 @@ internal final class SCKEventHolder: NSObject {
         // If view is not set, then do nothing.
         guard let rootView = eventView?.scheduleView else { return }
         let convertedRelativeMinimumHeight: SCKRelativeTimeLength = SCKRelativeTimeLength(self.minimumEventDisplayDuration)
+        var needsApplyTimeSubindicator: Bool = false
 
         // Invalidate state.
         isReady = false
@@ -163,6 +166,15 @@ internal final class SCKEventHolder: NSObject {
                 let endDate = cachedScheduledDate.addingTimeInterval(inSeconds)
                 relativeEnd = rootView.calculateRelativeTimeLocation(for: endDate)
 
+                if let validTimeSubindicator = self.timeSubindicatorConfig {
+                    self.timeSubindicatorConfig!.eventViewRelativeOffset = 0.0
+                }
+                else {
+//                    self.timeSubindicatorConfig = TickSubinidcatorConfig(thickness: 1.0, color: NSColor.red, height: 1.0, eventViewRelativeOffset: 0.0)
+                    self.timeSubindicatorConfig = TickSubinidcatorConfig(eventViewRelativeOffset: 0.0)
+                }
+                needsApplyTimeSubindicator = true
+
 
 //                let eventStartOffset: CGFloat = rootView.contentRect.height * CGFloat(relativeStart)
 //                // TODO: make sure it doesn't exceed the rootView's bounds
@@ -179,7 +191,7 @@ internal final class SCKEventHolder: NSObject {
             }
 
             if relativeEnd == SCKRelativeTimeLocationInvalid {
-                relativeEnd = 1.0 // Truncate event to the end of the view (not this might violate the minimum size, but we'll ignore that for now.
+                relativeEnd = 1.0 // Truncate event to the end of the view (note this might violate the minimum size, but we'll ignore that for now.
             }
             var proposedRelativeLength = relativeEnd - relativeStart
 //            if (proposedRelativeLength < convertedRelativeMinimumHeight) {
@@ -215,6 +227,10 @@ internal final class SCKEventHolder: NSObject {
 //            }
 
             relativeLength = proposedRelativeLength
+            if (needsApplyTimeSubindicator) {
+                self.eventView?.timeSubindicatorConfig = self.timeSubindicatorConfig
+                self.eventView?.needsDisplay = true
+            }
             isReady = true
         }
     }
