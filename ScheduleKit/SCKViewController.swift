@@ -281,8 +281,7 @@ import AppKit
 
         // Evaluate previously created event holders
         for existingHolder in eventHolders {
-            if eventSet.contains(existingHolder.representedObject) &&
-                existingHolder.representedObject.scheduledDate == existingHolder.cachedScheduledDate {
+            if eventSet.contains(existingHolder.representedObject) && existingHolder.representedObject.scheduledDate == existingHolder.cachedScheduledDate {
                 // The holder's represented object is still included and has the same date. We'll reuse it.
                 eventsToBeInserted.remove(existingHolder.representedObject)
             } else {
