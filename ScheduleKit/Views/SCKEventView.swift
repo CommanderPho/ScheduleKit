@@ -30,7 +30,7 @@ import Cocoa
 /// This view is responsible of managing a descriptive label and also of handling
 /// mouse events, including drag and drop operations, which may derive in changes
 /// to the represented event.
-public final class SCKEventView: NSView {
+@objc open class SCKEventView: NSView {
 
     /// The event holder represented by this view.
     internal var eventHolder: SCKEventHolder! {
@@ -111,20 +111,38 @@ public final class SCKEventView: NSView {
         return currentOverlayColor
     }
 
-
     private func updateOverlayColor() {
         self.innerLabel.textColor = self.labelTextColor
         self.innerLabel.setNeedsDisplay()
     }
 
 
-    public override func draw(_ dirtyRect: CGRect) {
+    open var isSelected: Bool {
+        get {
+            return (scheduleView.selectedEventView == self)
+        }
+        set {
+            // Select this view if not selected yet. This will trigger selection
+            // methods on the controller's delegate.
+            if scheduleView.selectedEventView != self {
+                scheduleView.selectedEventView = self
+            }
+        }
+    }
+
+    // Rediced Emphasis is a "greying out" to indicate that this EventView is not the focused event view, while a different one is.
+    open var isReducedEmphasis: Bool {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
-        let isThisViewSelected = (scheduleView.selectedEventView == self)
+        let isThisViewSelected = self.isSelected
+        return (isAnyViewSelected && !isThisViewSelected)
+    }
+
+
+    open override func draw(_ dirtyRect: CGRect) {
 
         var fillColor: NSColor
 
-        if isAnyViewSelected && !isThisViewSelected {
+        if self.isReducedEmphasis {
             // Set color to reducedEmphasisBackgroundColor when another event is selected
             if reducedEmphasisBackgroundColor == nil {
                 switch scheduleView.colorMode {
@@ -157,7 +175,7 @@ public final class SCKEventView: NSView {
         }
 
         // Make more transparent if dragging this view.
-        if isThisViewSelected, case .draggingContent(_, _, _) = draggingStatus {
+        if self.isSelected, case .draggingContent(_, _, _) = draggingStatus {
             fillColor = fillColor.withAlphaComponent(0.7)
         }
 
@@ -178,15 +196,15 @@ public final class SCKEventView: NSView {
 
     // MARK: - View lifecycle
 
-    /// The `SCKView` instance th which this view has been added.
+    /// The `SCKView` instance to which this view has been added.
     internal weak var scheduleView: SCKView!
 
-    public override func viewDidEndLiveResize() {
+    open override func viewDidEndLiveResize() {
         super.viewDidEndLiveResize()
         needsDisplay = true
     }
 
-    public override func viewDidMoveToSuperview() {
+    open override func viewDidMoveToSuperview() {
         scheduleView = superview as? SCKView
         // Add the title label to the view hierarchy.
         if superview != nil && innerLabel.superview == nil {
@@ -197,23 +215,19 @@ public final class SCKEventView: NSView {
 
     // MARK: - Overrides
 
-    public override var isFlipped: Bool {
+    open override var isFlipped: Bool {
         return true
     }
 
-    public override func resetCursorRects() {
+    open override func resetCursorRects() {
         let r = NSRect(x: 0, y: frame.height-2.0, width: frame.width, height: 4.0)
         addCursorRect(r, cursor: .resizeUpDown)
     }
 
     // MARK: - Mouse events and dragging
 
-    public override func mouseDown(with event: NSEvent) {
-        // Select this view if not selected yet. This will trigger selection
-        // methods on the controller's delegate.
-        if scheduleView.selectedEventView != self {
-            scheduleView.selectedEventView = self
-        }
+    open override func mouseDown(with event: NSEvent) {
+        self.isSelected = true
     }
 
     // MARK: Dragging
@@ -236,7 +250,7 @@ public final class SCKEventView: NSView {
     /// The view's drag and drop state.
     private var draggingStatus: Status = .idle
 
-    public override func mouseDragged(with event: NSEvent) {
+    open override func mouseDragged(with event: NSEvent) {
         switch draggingStatus {
         // User began dragging from bottom
         case .idle where NSCursor.current == NSCursor.resizeUpDown:
@@ -319,7 +333,7 @@ public final class SCKEventView: NSView {
 
     // MARK: Mouse up
 
-    public override func mouseUp(with event: NSEvent) {
+    open override func mouseUp(with event: NSEvent) {
         switch draggingStatus {
         case .draggingDuration(let old, let new):
 
@@ -367,8 +381,7 @@ public final class SCKEventView: NSView {
             scheduleView.endDragging()
 
         case .idle where event.clickCount == 2:
-            scheduleView.controller.eventManager?.scheduleController(scheduleView.controller,
-                                                                     didDoubleClickEvent: eventHolder.representedObject)
+            scheduleView.controller.eventManager?.scheduleController(scheduleView.controller, didDoubleClickEvent: eventHolder.representedObject)
         default: break
         }
         draggingStatus = .idle
@@ -391,14 +404,14 @@ public final class SCKEventView: NSView {
 
     // MARK: Right mouse events
 
-    public override func menu(for event: NSEvent) -> NSMenu? {
+    open override func menu(for event: NSEvent) -> NSMenu? {
         guard let c = scheduleView.controller, let eM = c.eventManager else {
             return nil
         }
         return eM.scheduleController(c, menuForEvent: eventHolder.representedObject)
     }
 
-    public override func rightMouseDown(with event: NSEvent) {
+    open override func rightMouseDown(with event: NSEvent) {
         // Select the event if not selected and continue showing the contextual
         // menu if any.
         if scheduleView.selectedEventView != self {
