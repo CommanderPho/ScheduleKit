@@ -26,32 +26,6 @@
 
 import Cocoa
 
-/// An object conforming to the `SCKGridViewDelegate` protocol may implement a
-/// method to provide unavailable time ranges to a grid-style schedule view in
-/// addition to other methods defined in `SCKViewDelegate`.
-@objc public protocol SCKGridViewDelegate: SCKViewDelegate {
-
-    /// Implement this method to specify the first displayed hour. Defaults to 0.
-    ///
-    /// - Parameter gridView: The grid view asking for a start hour.
-    /// - Returns: An hour value from 0 to 24.
-    @objc(dayStartHourForGridView:) func dayStartHour(for gridView: SCKGridView) -> Int
-
-    /// Implement this method to specify the last displayed hour. Defaults to 24.
-    ///
-    /// - Parameter gridView: The grid view asking for a start hour.
-    /// - Returns: An hour value from 0 to 24, where 0 is parsed as 24.
-    @objc(dayEndHourForGridView:) func dayEndHour(for gridView: SCKGridView) -> Int
-
-    /// Implemented by a grid-style schedule view's delegate to provide an array
-    /// of unavailable time ranges that are drawn as so by the view.
-    ///
-    /// - Parameter gridView: The schedule view asking for the values.
-    /// - Returns: The array of unavailable time ranges (may be empty).
-    @objc(unavailableTimeRangesForGridView:)
-    optional func unavailableTimeRanges(for gridView: SCKGridView) -> [SCKUnavailableTimeRange]
-}
-
 /// An abstract `SCKView` subclass that implements the common functionality of any
 /// grid-style schedule view, such as the built in day view and week view. This 
 /// class provides conflict management, interaction with the displayed days and 

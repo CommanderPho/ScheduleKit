@@ -64,6 +64,8 @@
 		99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */; };
 		99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */; };
 		99F4DDEC1E5DAF9F00D7A161 /* SCKEventRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */; };
+		D787767D20B861FC0027894A /* SCKViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D787767C20B861FC0027894A /* SCKViewDelegate.swift */; };
+		D787767F20B8631F0027894A /* SCKGridViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */; };
 		D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */; };
 		D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */; };
 		D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7911583209710E70026DD1F /* SCKLayoutManaging.swift */; };
@@ -186,6 +188,8 @@
 		99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKDayView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKWeekView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCKEventRequestTests.swift; sourceTree = "<group>"; };
+		D787767C20B861FC0027894A /* SCKViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKViewDelegate.swift; sourceTree = "<group>"; };
+		D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKGridViewDelegate.swift; sourceTree = "<group>"; };
 		D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKColorManaging.swift; sourceTree = "<group>"; };
 		D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLabelManaging.swift; sourceTree = "<group>"; };
 		D7911583209710E70026DD1F /* SCKLayoutManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLayoutManaging.swift; sourceTree = "<group>"; };
@@ -395,9 +399,19 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		D787768020B8632C0027894A /* SCKViewDelegates */ = {
+			isa = PBXGroup;
+			children = (
+				D787767C20B861FC0027894A /* SCKViewDelegate.swift */,
+				D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */,
+			);
+			name = SCKViewDelegates;
+			sourceTree = "<group>";
+		};
 		D79115822097057E0026DD1F /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
+				D787768020B8632C0027894A /* SCKViewDelegates */,
 				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
 				D7911583209710E70026DD1F /* SCKLayoutManaging.swift */,
 				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
@@ -667,12 +681,14 @@
 				99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */,
 				D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */,
 				9982601F1DDB3DAD00C46586 /* SCKEventManaging.swift in Sources */,
+				D787767F20B8631F0027894A /* SCKGridViewDelegate.swift in Sources */,
 				9997172A1DC3784A009BB046 /* SCKGridView.swift in Sources */,
 				999950971D8EE25A00128669 /* SCKEventView.swift in Sources */,
 				99BA3AC31DBF800E00A6FB33 /* BaseDefinitions.swift in Sources */,
 				999950991D8F216600128669 /* SCKView.swift in Sources */,
 				D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */,
 				999950951D8EB7CE00128669 /* SCKEventHolder.swift in Sources */,
+				D787767D20B861FC0027894A /* SCKViewDelegate.swift in Sources */,
 				999950911D8EB56D00128669 /* SCKEventRequest.swift in Sources */,
 				99BA3ABF1DBF709C00A6FB33 /* SCKEvent.swift in Sources */,
 				9982601C1DDA7D8B00C46586 /* _ScheduleKit-ObjC.swift in Sources */,
