@@ -38,6 +38,15 @@ import Cocoa
     /// are selected and it isn't.
     @objc var reducedEmphasisEventColor: NSColor { get }
 
+    
+    /// The color that will be used as `SCKEventView`s label.textcolor when displayed
+    /// in a `SCKView` with `colorMode` set to `.byEventOwner`
+    @objc var eventOverlayColor: NSColor { get }
+
+    /// The color that will be used as `SCKEventView`s label.textcolor when displayed
+    /// in a `SCKView` with `colorMode` set to `.byEventOwner` and currently being reducedEmphasis because other events
+    /// are selected and it isn't.
+    @objc var reducedEmphasisEventOverlayColor: NSColor { get }
 }
 
 

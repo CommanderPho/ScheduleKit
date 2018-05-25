@@ -36,6 +36,7 @@ public final class SCKEventView: NSView {
     internal var eventHolder: SCKEventHolder! {
         didSet {
             innerLabel.stringValue = eventHolder.cachedTitle
+            innerLabel.textColor = self.labelTextColor
         }
     }
 
@@ -58,6 +59,64 @@ public final class SCKEventView: NSView {
     /// when the event's user or user event color changes in .byEventOwner mode.
     internal var backgroundColor: NSColor?
     internal var reducedEmphasisBackgroundColor: NSColor?
+
+    /// A cached copy of the last used text colors to increase drawing
+    /// performance. Invalidated when the schedule view's color mode changes or
+    /// when the event's user or user event color changes in .byEventOwner mode.
+    internal var overlayColor: NSColor? {
+        didSet {
+            self.updateOverlayColor()
+        }
+    }
+    internal var reducedEmphasisOverlayColor: NSColor? {
+        didSet {
+            self.updateOverlayColor()
+        }
+    }
+
+    private var labelTextColor: NSColor {
+        let isAnyViewSelected = (scheduleView.selectedEventView != nil)
+        let isThisViewSelected = (scheduleView.selectedEventView == self)
+        var currentOverlayColor: NSColor
+        if isAnyViewSelected && !isThisViewSelected {
+            // Set to reducedEmphasisOverlayColor when another event is selected
+            if reducedEmphasisOverlayColor == nil {
+                switch scheduleView.colorMode {
+                case .byEventKind:
+                    let kind = eventHolder.representedObject.eventKind
+                    let color = scheduleView.delegate?.reducedEmphasisOverlayColor?(for: kind, in: scheduleView)
+                    reducedEmphasisOverlayColor = color ?? scheduleView.defaultEventReducedEmphasisOverlayColor
+                case .byEventOwner:
+                    let color = eventHolder.cachedUser?.reducedEmphasisEventColor
+                    reducedEmphasisOverlayColor = color ?? scheduleView.defaultEventReducedEmphasisOverlayColor
+                }
+            }
+            currentOverlayColor = reducedEmphasisOverlayColor!
+
+        } else {
+            // No view selected or this view selected.
+            if overlayColor == nil {
+                switch scheduleView.colorMode {
+                case .byEventKind:
+                    let kind = eventHolder.representedObject.eventKind
+                    let color = scheduleView.delegate?.overlayColor?(for: kind, in: scheduleView)
+                    overlayColor = color ?? scheduleView.defaultEventOverlayColor
+                case .byEventOwner:
+                    let color = eventHolder.cachedUser?.eventOverlayColor
+                    overlayColor = color ?? scheduleView.defaultEventOverlayColor
+                }
+            }
+            currentOverlayColor = overlayColor!
+        }
+        return currentOverlayColor
+    }
+
+
+    private func updateOverlayColor() {
+        self.innerLabel.textColor = self.labelTextColor
+        self.innerLabel.setNeedsDisplay()
+    }
+
 
     public override func draw(_ dirtyRect: CGRect) {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)

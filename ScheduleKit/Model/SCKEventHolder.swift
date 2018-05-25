@@ -64,6 +64,8 @@ internal final class SCKEventHolder: NSObject {
         addTitleObserver(on: obj)
         addUserEventColorObserver(on: obj)
         addUserReducedEmphasisEventColorObserver(on: obj)
+        addUserEventOverlayColorObserver(on: obj)
+        addUserReducedEmphasisEventOverlayColorObserver(on: obj)
     }
 
     // MARK: - Object state
@@ -382,6 +384,48 @@ internal extension SCKEventHolder {
                     && change.oldValue != change.newValue {
                     strongSelf.eventView?.backgroundColor = updatedUser.eventColor
                     strongSelf.eventView?.reducedEmphasisBackgroundColor = updatedUser.reducedEmphasisEventColor
+                    strongSelf.eventView?.needsDisplay = true
+                }
+            }
+            self.processOrEnqueueChange(closure: closure, parameter: event.user)
+        }
+        changeObserations.append(observation)
+    }
+
+    private func addUserEventOverlayColorObserver<T: SCKEvent>(on object: T) {
+        let keyPath: KeyPath<T, NSColor> = \T.user.eventOverlayColor
+        let observation = object.observe(keyPath, options: [.old, .new]) { [unowned self] (event, change) in
+            guard !self.shouldIgnoreChanges else { return }
+
+            let closure: ((SCKUser) -> Void) = { [weak self] (updatedUser) in
+                guard let strongSelf = self else { return }
+                if strongSelf.cachedUser !== updatedUser {
+                    strongSelf.cachedUser = updatedUser
+                }
+                if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
+                    && change.oldValue != change.newValue {
+                    strongSelf.eventView?.overlayColor = updatedUser.eventOverlayColor
+                    strongSelf.eventView?.needsDisplay = true
+                }
+            }
+            self.processOrEnqueueChange(closure: closure, parameter: event.user)
+        }
+        changeObserations.append(observation)
+    }
+
+    private func addUserReducedEmphasisEventOverlayColorObserver<T: SCKEvent>(on object: T) {
+        let keyPath: KeyPath<T, NSColor> = \T.user.reducedEmphasisEventOverlayColor
+        let observation = object.observe(keyPath, options: [.old, .new]) { [unowned self] (event, change) in
+            guard !self.shouldIgnoreChanges else { return }
+
+            let closure: ((SCKUser) -> Void) = { [weak self] (updatedUser) in
+                guard let strongSelf = self else { return }
+                if strongSelf.cachedUser !== updatedUser {
+                    strongSelf.cachedUser = updatedUser
+                }
+                if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
+                    && change.oldValue != change.newValue {
+                    strongSelf.eventView?.reducedEmphasisOverlayColor = updatedUser.reducedEmphasisEventOverlayColor
                     strongSelf.eventView?.needsDisplay = true
                 }
             }

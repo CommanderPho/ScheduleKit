@@ -54,6 +54,15 @@ import Cocoa
     ///            background.
     @objc (reducedEmphasisColorForEventKind:inScheduleView:)
     optional func reducedEmphasisColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
+
+
+    @objc (overlayColorForEventKind:inScheduleView:)
+    optional func overlayColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
+
+    @objc (reducedEmphasisOverlayColorForEventKind:inScheduleView:)
+    optional func reducedEmphasisOverlayColor(for eventKindValue: Int, in scheduleView: SCKView) -> NSColor
+
+    
 }
 
 
@@ -89,6 +98,19 @@ import Cocoa
     }
 
     @objc public var defaultEventReducedEmphasisBackgroundColor: NSColor = NSColor(white: 0.85, alpha: 1.0) {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    // Shared amongst all events in the case that the colors cannot be retrieved from the delegate
+    @objc public var defaultEventOverlayColor: NSColor = NSColor.white {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    @objc public var defaultEventReducedEmphasisOverlayColor: NSColor = NSColor.darkGray {
         didSet {
             self.setUp()
         }
@@ -338,6 +360,8 @@ import Cocoa
                 for eventView in eventViews {
                     eventView.backgroundColor = nil
                     eventView.reducedEmphasisBackgroundColor = nil
+                    eventView.overlayColor = nil
+                    eventView.reducedEmphasisOverlayColor = nil
                     eventView.needsDisplay = true
                 }
             }
