@@ -31,6 +31,12 @@ import Cocoa
 /// automatically created by the `SCKViewController` reloadData methods.
 internal final class SCKEventHolder: NSObject {
 
+    // For any event of duration less than the set minimum, it will draw as if it were the minimum duration instead.
+    // This prevents not being able to read the text or see the event view because the duration is too small.
+    internal var minimumEventDisplayDuration: Int {
+        return 30
+    }
+
     /// Initializes a new instance representing a given event object associated
     /// with a concrete `SCKEventView`, managed by the same controller. Returns
     /// `nil` when the represented object's scheduled date or duration cannot
@@ -118,7 +124,7 @@ internal final class SCKEventHolder: NSObject {
     private(set) var isReady: Bool = false
 
     /// Invalidates the holder's cached properties and recalculates them by
-    /// comparin the values from the represented object's `duration` and
+    /// comparing the values from the represented object's `duration` and
     /// `scheduledDate` properties and the schedule view date bounds.
     /// This method might be invoked automatically:
     /// - When the `SCKEventHolder` object is initialized.
@@ -133,6 +139,8 @@ internal final class SCKEventHolder: NSObject {
     internal func recalculateRelativeValues() {
         // If view is not set, then do nothing.
         guard let rootView = eventView?.scheduleView else { return }
+        let convertedRelativeMinimumHeight: SCKRelativeTimeLength = SCKRelativeTimeLength(self.minimumEventDisplayDuration)
+
         // Invalidate state.
         isReady = false
         relativeStart = SCKRelativeTimeLocationInvalid
@@ -141,16 +149,73 @@ internal final class SCKEventHolder: NSObject {
         // Calculate new start
         relativeStart = rootView.calculateRelativeTimeLocation(for: cachedScheduledDate)
         if relativeStart != SCKRelativeTimeLocationInvalid {
+//            let minimumHeight: CGFloat = self.minimumEventHeight
+//            let convertedRelativeMinimumHeight: SCKRelativeTimeLength = rootView.calculateRelativeTimeDuration(for: minimumHeight)
+
             if cachedDuration > 0 {
                 let inSeconds = SCKRelativeTimeLength(cachedDuration * 60)
                 let endDate = cachedScheduledDate.addingTimeInterval(inSeconds)
                 relativeEnd = rootView.calculateRelativeTimeLocation(for: endDate)
-                if relativeEnd == SCKRelativeTimeLocationInvalid {
-                    relativeEnd = 1.0
                 }
-                relativeLength = relativeEnd - relativeStart
-                isReady = true
+            else { // For instantaneous events
+                self.cachedDuration = Int(convertedRelativeMinimumHeight)
+                let inSeconds = SCKRelativeTimeLength(cachedDuration * 60)
+                let endDate = cachedScheduledDate.addingTimeInterval(inSeconds)
+                relativeEnd = rootView.calculateRelativeTimeLocation(for: endDate)
+
+
+//                let eventStartOffset: CGFloat = rootView.contentRect.height * CGFloat(relativeStart)
+//                // TODO: make sure it doesn't exceed the rootView's bounds
+//                let proposedRelativeEnd = relativeStart + convertedRelativeMinimumHeight
+//                let proposedEndOffset: CGFloat = eventStartOffset + minimumHeight
+//
+//                if (rootView.contentRect.height >= proposedEndOffset) {
+//                    relativeEnd = SCKRelativeTimeLocation(proposedRelativeEnd)
+//                }
+//                else {
+//                    // Spans out of the displayed day area!
+//                    relativeEnd = SCKRelativeTimeLocationInvalid
+//                }
             }
+
+            if relativeEnd == SCKRelativeTimeLocationInvalid {
+                relativeEnd = 1.0 // Truncate event to the end of the view (not this might violate the minimum size, but we'll ignore that for now.
+            }
+            var proposedRelativeLength = relativeEnd - relativeStart
+//            if (proposedRelativeLength < convertedRelativeMinimumHeight) {
+//                // Must adjust relative end or relative start to match the required relative length
+//                var remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                // Begin by shifting the end down as much as possible.
+//                let availableBelowOffset = 1.0 - relativeEnd
+//                // If there is any space below the current relativeEnd, fill it
+//                if (availableBelowOffset > 0.0) {
+//                    // Move down by the available below offset
+//                    relativeEnd = relativeEnd + remainingLengthToFill
+//                    // Clamp to the maximum (1.0)
+//                    relativeEnd = max(relativeEnd, 1.0)
+//
+//                    //Compute the updated difference
+//                    proposedRelativeLength = relativeEnd - relativeStart
+//                    remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                }
+//
+//                // If that update was still enough try to shift the event's relativeStart up to compensate
+//                if (remainingLengthToFill > 0.0) {
+//                    relativeStart = (relativeStart - remainingLengthToFill)
+//                    relativeStart = min(0.0, relativeStart) // Ensure the adjustment doesn't escape the box
+//                    //Compute the updated difference
+//                    proposedRelativeLength = relativeEnd - relativeStart
+//                    remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                }
+//
+//                if (remainingLengthToFill > 0.0) {
+//                    print("Error! The view is too smmall to satisify the minimum EventView height requirements!")
+//                }
+//                // Otherwise it has been resolved to the best of our ability.
+//            }
+
+            relativeLength = proposedRelativeLength
+            isReady = true
         }
     }
 
