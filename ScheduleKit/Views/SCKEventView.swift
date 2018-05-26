@@ -26,6 +26,9 @@
 
 import Cocoa
 
+
+
+
 /// The view class used by ScheduleKit to display each event in a schedule view.
 /// This view is responsible of managing a descriptive label and also of handling
 /// mouse events, including drag and drop operations, which may derive in changes
@@ -73,6 +76,54 @@ import Cocoa
             self.updateOverlayColor()
         }
     }
+
+    internal var needsTimeSubindicatorLine: Bool {
+        guard let validConfig = self.timeSubindicatorConfig else { return false }
+//        return validConfig.shouldDisplay
+        return true
+    }
+
+    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
+        didSet {
+            self.needsDisplay = true
+        }
+    }
+
+    //internal var timeSubindicatorLineConfig
+
+    private func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
+        guard let validConfig = self.timeSubindicatorConfig else { return }
+        //let currentSize = self.frame.size
+        let currentSize = dirtyRect.size
+        let verticalOffset: CGFloat = currentSize.height * validConfig.eventViewRelativeOffset
+        let maxHorizontalOffset: CGFloat = currentSize.width * validConfig.height
+
+        //Finalize Position, we move none on the x axis (drawing a vertical line)
+        let startPointPosition: CGPoint = CGPoint(x: 0, y: verticalOffset)
+        let endPointPosition: CGPoint = CGPoint(x: currentSize.width, y: verticalOffset)
+
+        let path = NSBezierPath.init()
+
+        path.lineWidth = validConfig.thickness
+
+        // move to starting point on line (defined origin)
+        path.move(to: startPointPosition)
+        // draw line of required length
+        path.line(to: endPointPosition)
+
+        let finalStrokeColor: NSColor
+        if let validColor = validConfig.color {
+            finalStrokeColor = validColor
+        }
+        else {
+            finalStrokeColor = self.overlayColor ?? self.scheduleView.defaultEventOverlayColor
+        }
+        finalStrokeColor.setStroke()
+        path.stroke()
+    }
+
+
+
 
     private var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
@@ -125,7 +176,7 @@ import Cocoa
             // Select this view if not selected yet. This will trigger selection
             // methods on the controller's delegate.
             if scheduleView.selectedEventView != self {
-                scheduleView.selectedEventView = self
+                scheduleView.safeUpdateSelectedEventView(self, shouldCallDelegates: true)
             }
         }
     }
@@ -191,6 +242,10 @@ import Cocoa
                 fillColor.withAlphaComponent(0.2).setFill()
             }
             path.fill()
+        }
+
+        if (self.needsTimeSubindicatorLine) {
+            self.drawTimeSubindicatorLine(dirtyRect)
         }
     }
 
@@ -415,7 +470,8 @@ import Cocoa
         // Select the event if not selected and continue showing the contextual
         // menu if any.
         if scheduleView.selectedEventView != self {
-            scheduleView.selectedEventView = self
+            scheduleView.safeUpdateSelectedEventView(self, shouldCallDelegates: true)
+//            scheduleView.selectedEventView = self
         }
         super.rightMouseDown(with: event)
     }
