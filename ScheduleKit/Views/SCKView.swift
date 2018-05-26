@@ -173,6 +173,18 @@ import Cocoa
         return (dateRef - startDateRef) / dateInterval.duration
     }
 
+    final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
+        let size = self.contentRect.size
+        let totalHight: CGFloat = size.height
+        if (totalHight <= 0.0) {
+            return SCKRelativeTimeLengthInvalid
+        }
+        else {
+            let percentHeight = height / totalHight
+            return SCKRelativeTimeLength(percentHeight)
+        }
+    }
+
     /// Calculates the relative time location in the view's date interval for a
     /// given point in the view's coordinate system. The default implementation
     /// returns `SCKRelativeTimeLocationInvalid`. Subclasses must override this
@@ -185,6 +197,8 @@ import Cocoa
     func relativeTimeLocation(for point: CGPoint) -> SCKRelativeTimeLocation {
         return SCKRelativeTimeLocationInvalid
     }
+
+
 
     // MARK: - Subview management
 
@@ -362,18 +376,18 @@ import Cocoa
     }
 
     private func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
-            if selectedEventView != nil && newValue == nil {
+        if selectedEventView != nil && newValue == nil {
             if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 controller.eventManager?.scheduleControllerDidClearSelection(controller)
             }
         }
     }
     private func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
-            for eventView in eventViews {
-                eventView.needsDisplay = true
-            }
-            if let s = selectedEventView, let eM = controller.eventManager {
-                //Event view has already checked if `s` was the same as old value.
+        for eventView in eventViews {
+            eventView.needsDisplay = true
+        }
+        if let s = selectedEventView, let eM = controller.eventManager {
+            //Event view has already checked if `s` was the same as old value.
             if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 let theEvent = s.eventHolder.representedObject
                 eM.scheduleController(controller, didSelectEvent: theEvent)
