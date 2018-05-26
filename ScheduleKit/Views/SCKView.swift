@@ -336,23 +336,76 @@ import Cocoa
     /// `scheduleController(_:didSelectEvent:)` methods on the controller`s event
     /// manager when appropiate. In addition, it marks all event views as needing
     /// display in order to make them reflect the current selection.
-    public weak var selectedEventView: SCKEventView? {
+    internal(set) weak var selectedEventView: SCKEventView? {
         willSet {
+            self.willSetSelectedEventView(newValue: newValue)
+        }
+        didSet {
+            self.didSetSelectedEventView(newValue: self.selectedEventView)
+        }
+    }
+
+    private var isBlockingSelectionDelegateCalling: Bool = false
+    // Updates the event view object without calling cascading delegates
+    internal func safeUpdateSelectedEventView(_ newValue: SCKEventView?, shouldCallDelegates: Bool) {
+        // Unblock delegate calling if needed
+        if (!shouldCallDelegates) {
+            self.isBlockingSelectionDelegateCalling = true
+        }
+
+        self.selectedEventView = newValue
+
+        // Unblock delegate calling if needed
+        if (!shouldCallDelegates && self.isBlockingSelectionDelegateCalling) {
+            self.isBlockingSelectionDelegateCalling = false
+        }
+    }
+
+    private func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
             if selectedEventView != nil && newValue == nil {
+            if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 controller.eventManager?.scheduleControllerDidClearSelection(controller)
             }
         }
-        didSet {
+    }
+    private func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
             for eventView in eventViews {
                 eventView.needsDisplay = true
             }
             if let s = selectedEventView, let eM = controller.eventManager {
                 //Event view has already checked if `s` was the same as old value.
+            if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 let theEvent = s.eventHolder.representedObject
                 eM.scheduleController(controller, didSelectEvent: theEvent)
             }
         }
     }
+
+
+    public func select(event: SCKEvent, shouldCallDelegates: Bool) {
+        if let validEventViewIndex = self.eventViews.index(where: { $0.eventHolder.representedObject == event }) {
+            self.select(withEventIndex: validEventViewIndex, shouldCallDelegates: shouldCallDelegates)
+        }
+        else {
+            // Couldn't find event view representing this event
+            self.safeUpdateSelectedEventView(nil, shouldCallDelegates: shouldCallDelegates)
+        }
+    }
+
+    public func select(withEventIndex index: Int, shouldCallDelegates: Bool) {
+        if (index >= 0) && (index < self.eventViews.count) {
+            self.safeUpdateSelectedEventView(self.eventViews[index], shouldCallDelegates: shouldCallDelegates)
+        }
+        else {
+            self.safeUpdateSelectedEventView(nil, shouldCallDelegates: shouldCallDelegates)
+        }
+    }
+
+    public func clearSelection(shouldCallDelegates: Bool) {
+        self.safeUpdateSelectedEventView(nil, shouldCallDelegates: shouldCallDelegates)
+    }
+
+
 
     public override func mouseDown(with event: NSEvent) {
         // Called when user clicks on an empty space.

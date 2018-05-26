@@ -176,7 +176,7 @@ import Cocoa
             // Select this view if not selected yet. This will trigger selection
             // methods on the controller's delegate.
             if scheduleView.selectedEventView != self {
-                scheduleView.selectedEventView = self
+                scheduleView.safeUpdateSelectedEventView(self, shouldCallDelegates: true)
             }
         }
     }
@@ -470,7 +470,8 @@ import Cocoa
         // Select the event if not selected and continue showing the contextual
         // menu if any.
         if scheduleView.selectedEventView != self {
-            scheduleView.selectedEventView = self
+            scheduleView.safeUpdateSelectedEventView(self, shouldCallDelegates: true)
+//            scheduleView.selectedEventView = self
         }
         super.rightMouseDown(with: event)
     }

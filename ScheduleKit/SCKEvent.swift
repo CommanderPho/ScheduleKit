@@ -78,3 +78,17 @@ import Cocoa
     /// owner.
     @objc var user: SCKUser { get }
 }
+
+
+public func ==(lhs: SCKUser, rhs: SCKUser) -> Bool {
+    if (lhs.eventColor != rhs.eventColor) { return false }
+    return true
+}
+
+public func ==(lhs: SCKEvent, rhs: SCKEvent) -> Bool {
+    if (lhs.scheduledDate != rhs.scheduledDate) || (lhs.duration != rhs.duration) || (lhs.eventKind != rhs.eventKind) || (lhs.title != rhs.title) || (lhs.user == rhs.user) { return false }
+    return true
+}
+
+
+
