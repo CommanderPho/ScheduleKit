@@ -40,7 +40,7 @@ import Cocoa
     /// Displays the default date interval (this month) and asks the controller to
     /// reload matching events.
     func resetMonthOffset(_ sender: Any) {
-        let units: Set<Calendar.Component> = [.month]
+        let units: Set<Calendar.Component> = [.month, .year]
         let monthComponents = sharedCalendar.dateComponents(units, from: Date())
         guard let start = sharedCalendar.date(from: monthComponents) else {
             fatalError("Could not calculate the start date for current month.")
