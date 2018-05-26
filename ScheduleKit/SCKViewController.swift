@@ -32,6 +32,8 @@ import AppKit
     case day
     /// The controller works with a week date interval.
     case week
+    /// The controller works with a month date interval.
+    case month
 }
 
 /// A NSViewController subclass that sets up a schedule view embedded in a scroll
@@ -91,7 +93,16 @@ import AppKit
         let oldLabelDelegate = scheduleView?.labelManagingDelegate
         let oldLayoutDelegate = scheduleView?.layoutManagingDelegate
         let f = CGRect(origin: CGPoint.zero, size: scrollView.contentSize)
-        let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
+        let sView: SCKGridView
+        switch mode {
+        case .day:
+            sView = SCKDayView(frame: f)
+        case .week:
+            sView = SCKWeekView(frame: f)
+        case .month:
+            sView = SCKMonthView(frame: f)
+        }
+//        let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
         scrollView.documentView?.removeFromSuperview()
         scheduleView = nil
         scheduleView = sView
@@ -355,6 +366,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.decreaseDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.decreaseWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.decreaseMonthOffset(sender)
         }
     }
 
@@ -364,6 +376,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.increaseDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.increaseWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.increaseMonthOffset(sender)
         }
     }
 
@@ -373,6 +386,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.resetDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.resetWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.resetMonthOffset(sender)
         }
     }
 

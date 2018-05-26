@@ -50,15 +50,6 @@ internal let SCKRelativeTimeLocationInvalid = SCKRelativeTimeLocation(-Int.max)
 /// in a `SCKView` subclass is invalid (negative or too wide).
 internal let SCKRelativeTimeLengthInvalid = SCKRelativeTimeLocation.leastNormalMagnitude
 
-/// Possible color styles for drawing event view backgrounds.
-@objc public enum SCKEventColorMode: Int {
-
-    /// Colors events according to their event kind.
-    case byEventKind
-
-    /// Colors events according to their user's event color.
-    case byEventOwner
-}
 
 extension Calendar {
 

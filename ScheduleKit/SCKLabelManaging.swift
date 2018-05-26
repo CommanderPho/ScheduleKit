@@ -10,13 +10,6 @@ import Foundation
 import Cocoa
 
 
-public enum LabelType { case month(date: Date?), day(date: Date?)
-    case hour(hourValue: Int)
-    case min(hourValue: Int, minValue: Int)
-    case other
-}
-
-
 public protocol SCKLabelManaging: class {
     var dayLabelsDateFormatter: DateFormatter {get}
     var monthLabelsDateFormatter: DateFormatter {get}
