@@ -40,6 +40,7 @@ import Cocoa
         didSet {
             innerLabel.stringValue = eventHolder.cachedTitle
             innerLabel.textColor = self.labelTextColor
+            innerLabel.font = self.innerLabelFont
         }
     }
 
@@ -54,6 +55,13 @@ import Cocoa
         _label.autoresizingMask = [.width, .height]
         return _label
     }()
+
+    public var innerLabelFont: NSFont = NSFont.systemFont(ofSize: 12.0)  {
+        didSet {
+            self.innerLabel.font = self.innerLabelFont
+            self.innerLabel.setNeedsDisplay()
+        }
+    }
 
     // MARK: - Drawing
 
@@ -122,9 +130,6 @@ import Cocoa
         path.stroke()
     }
 
-
-
-
     private var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
         let isThisViewSelected = (scheduleView.selectedEventView == self)
@@ -190,9 +195,7 @@ import Cocoa
 
 
     open override func draw(_ dirtyRect: CGRect) {
-
         var fillColor: NSColor
-
         if self.isReducedEmphasis {
             // Set color to reducedEmphasisBackgroundColor when another event is selected
             if reducedEmphasisBackgroundColor == nil {
@@ -265,6 +268,10 @@ import Cocoa
         if superview != nil && innerLabel.superview == nil {
             innerLabel.frame = CGRect(origin: .zero, size: frame.size)
             addSubview(innerLabel)
+        }
+        if superview != nil {
+            let newTrackingArea = NSTrackingArea(rect: self.bounds, options: [.activeAlways, .mouseEnteredAndExited], owner: self, userInfo: nil)
+            self.addTrackingArea(newTrackingArea)
         }
     }
 
@@ -475,4 +482,39 @@ import Cocoa
         }
         super.rightMouseDown(with: event)
     }
+
+
+    open override func mouseEntered(with event: NSEvent) {
+        debugPrint("mouseEntered: ")
+        guard let validTrackingArea = event.trackingArea else {
+            debugPrint("No tracking area found!")
+            return super.mouseEntered(with: event)
+        }
+        if (self.trackingAreas.contains(validTrackingArea)) {
+            debugPrint("day")
+            self.isSelected = true
+
+        }
+        else {
+            return super.mouseEntered(with: event)
+        }
+    }
+
+    open override func mouseExited(with event: NSEvent) {
+        debugPrint("mouseExited: ")
+        guard let validTrackingArea = event.trackingArea else {
+            debugPrint("No tracking area found!")
+            return super.mouseExited(with: event)
+        }
+        if (self.trackingAreas.contains(validTrackingArea)) {
+            debugPrint("day")
+            self.isSelected = false
+            
+        }
+        else {
+            return super.mouseExited(with: event)
+        }
+    }
+
+
 }

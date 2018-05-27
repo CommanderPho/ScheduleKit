@@ -308,6 +308,7 @@ import AppKit
         for e in (eventsToBeInserted.compactMap { $0 as? SCKEvent }) {
             let eventView: SCKEventView
             if let validEventManager = self.eventManager {
+                // Here is where we call the delegate
                 if let validCustomEventView = validEventManager.scheduleController(self, viewForEvent: e) {
                     eventView = validCustomEventView
                 }

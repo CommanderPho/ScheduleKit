@@ -80,6 +80,11 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - event: The double clicked event.
     func scheduleController(_ controller: SCKViewController, didDoubleClickConcreteEvent event: EventType)
 
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterConcreteEvent event: EventType)
+    func scheduleController(_ controller: SCKViewController, mouseDidExitConcreteEvent event: EventType)
+
+
+
     // MARK: Event changing
 
     /// Implement this method to conditionally allow or deny a user-initiated
@@ -92,9 +97,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - oldValue: The current event's duration in minutes.
     ///   - newValue: The proposed event's duration in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDurationOfConcreteEvent event: EventType,
-                            from oldValue: Int, to newValue: Int) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDurationOfConcreteEvent event: EventType, from oldValue: Int, to newValue: Int) -> Bool
 
     /// Implement this method to conditionally allow or deny a user-initiated
     /// date change in one of the events managed by a SCKViewController. If
@@ -154,6 +157,15 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
         scheduleController(controller, didDoubleClickConcreteEvent: casted(event))
     }
 
+    public func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent) {
+        scheduleController(controller, mouseDidEnterConcreteEvent: casted(event))
+    }
+
+    public func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent) {
+        scheduleController(controller, mouseDidExitConcreteEvent: casted(event))
+    }
+
+
     public func scheduleController(_ controller: SCKViewController,
                                    shouldChangeDurationOfEvent event: SCKEvent,
                                    from oldValue: Int, to newValue: Int) -> Bool {
@@ -205,6 +217,9 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
                                    didDoubleClickConcreteEvent event: EventType) {
 
     }
+
+    public func scheduleController(_ controller: SCKViewController, mouseDidEnterConcreteEvent event: EventType) {}
+    public func scheduleController(_ controller: SCKViewController, mouseDidExitConcreteEvent event: EventType) {}
 
     public func scheduleController(_ controller: SCKViewController,
                                    shouldChangeDurationOfConcreteEvent event: EventType,

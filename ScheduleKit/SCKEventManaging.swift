@@ -96,6 +96,24 @@ public protocol SCKEventManaging: class {
     ///   - event: The double clicked event.
     func scheduleController(_ controller: SCKViewController, didDoubleClickEvent event: SCKEvent)
 
+    /// Implement this method to be notified when an event is hovered with the mouse in a
+    /// schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing the event.
+    ///   - event: The mouse entered event.
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent)
+
+    /// Implement this method to be notified when an event is no longer hovered by the mouse in a
+    /// schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing the event.
+    ///   - event: The mouse exit event.
+    func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent)
+
+
+
     // MARK: Event changing
 
     /// Implement this method to conditionally allow or deny a user-initiated
@@ -167,6 +185,11 @@ public extension SCKEventManaging {
 
     func scheduleController(_ controller: SCKViewController, didDoubleClickEvent event: SCKEvent) {}
 
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent) {}
+
+    func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent) {}
+
+    
     func scheduleController(_ controller: SCKViewController,
                             shouldChangeDurationOfEvent event: SCKEvent,
                             from oldValue: Int, to newValue: Int) -> Bool {
@@ -182,4 +205,6 @@ public extension SCKEventManaging {
     }
 
     func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView? { return nil }
+
+
 }

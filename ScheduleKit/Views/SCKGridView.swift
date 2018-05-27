@@ -36,9 +36,8 @@ import Cocoa
 ///
 /// - Note: Do not instantiate this class directly.
 ///
-public class SCKGridView: SCKView {
+open class SCKGridView: SCKView {
 //
-
 
 
     var Constants: SCKLayoutConstants {
@@ -60,26 +59,26 @@ public class SCKGridView: SCKView {
         updateHourParameters()
     }
 
-    override public weak var delegate: SCKViewDelegate? {
+    override open weak var delegate: SCKViewDelegate? {
         didSet {
             readDefaultsFromDelegate()
         }
     }
 
-    override public weak var colorManagingDelegate: SCKColorManaging? {
+    override open weak var colorManagingDelegate: SCKColorManaging? {
         didSet {
             self.setUp()
         }
     }
 
-    override public weak var labelManagingDelegate: SCKLabelManaging? {
+    override open weak var labelManagingDelegate: SCKLabelManaging? {
         didSet {
             self.setUp()
             self.resetLabels(andConfigure: true)
         }
     }
 
-    override public weak var layoutManagingDelegate: SCKLayoutManaging? {
+    override open weak var layoutManagingDelegate: SCKLayoutManaging? {
         didSet {
             self.setUp()
         }
@@ -87,7 +86,7 @@ public class SCKGridView: SCKView {
 
     // MARK: - Date handling additions
 
-    public override var dateInterval: DateInterval {
+    open override var dateInterval: DateInterval {
         didSet { // Set up day count and day labels
             let sD = dateInterval.start
             let eD = dateInterval.end.addingTimeInterval(1)
@@ -154,8 +153,6 @@ public class SCKGridView: SCKView {
         return label
     }
 
-
-
     func resetHourLabels(andConfigure shouldConfigure: Bool) {
         // Remove all hour and minute labels
         for (hour, label) in self.hourLabels {
@@ -208,6 +205,10 @@ public class SCKGridView: SCKView {
     /// A container view for day labels. Pinned at the top of the scroll view.
     private let dayLabelingView = NSView(frame: .zero)
 
+    // The rectangles that wrap all the events in the day
+    private var dayColumnRectangles: [CGRect] = []
+
+
     public func getDayLabelingView() -> NSView {
         return self.dayLabelingView
     }
@@ -216,6 +217,9 @@ public class SCKGridView: SCKView {
         return (self.dayLabels, self.monthLabels)
     }
 
+    public func getGridColumnRectangles() -> [CGRect] {
+        return self.dayColumnRectangles
+    }
 
 
 
@@ -382,7 +386,9 @@ public class SCKGridView: SCKView {
 
     // MARK: - Date transform additions
 
-    override func relativeTimeLocation(for point: CGPoint) -> Double {
+
+    // Given any point within the rectangle, determines the time it should occur on.
+    override open func relativeTimeLocation(for point: CGPoint) -> Double {
         if contentRect.contains(point) {
             let dayWidth: CGFloat = contentRect.width / CGFloat(dayCount)
             let offsetPerDay = 1.0 / Double(dayCount)
@@ -404,7 +410,7 @@ public class SCKGridView: SCKView {
     ///   - hour: The hour.
     ///   - m: The minute.
     /// - Returns: The calculated Y position.
-    internal func yFor(hour: Int, minute: Int) -> CGFloat {
+    open func yFor(hour: Int, minute: Int) -> CGFloat {
         let canvas = contentRect
         let hours = CGFloat(hourCount)
         let h = CGFloat(hour - firstHour)
@@ -413,13 +419,13 @@ public class SCKGridView: SCKView {
 
     // MARK: - Event Layout overrides
 
-    override public var contentRect: CGRect {
+    override open var contentRect: CGRect {
         // Exclude day and hour labeling areas.
         return CGRect(x: Constants.HourAreaWidth, y: Constants.paddingTop,
                       width: frame.width - Constants.HourAreaWidth, height: frame.height - Constants.paddingTop)
     }
 
-    override func invalidateLayout(for eventView: SCKEventView) {
+    override open func invalidateLayout(for eventView: SCKEventView) {
         // Overriden to manage event conflicts. No need to call super in this case.
         let conflicts = controller.resolvedConflicts(for: eventView.eventHolder)
         if !conflicts.isEmpty {
@@ -431,19 +437,19 @@ public class SCKGridView: SCKView {
         eventView.eventHolder.conflictIndex = conflicts.index(where: { $0 === eventView.eventHolder }) ?? 0
     }
 
-    override func prepareForDragging() {
+    override open func prepareForDragging() {
         updateHourLabelsVisibility()
         super.prepareForDragging()
     }
 
-    override func restoreAfterDragging() {
+    override open func restoreAfterDragging() {
         updateHourLabelsVisibility()
         super.restoreAfterDragging()
     }
 
     // MARK: - NSView overrides
 
-    public override var intrinsicContentSize: NSSize {
+    open override var intrinsicContentSize: NSSize {
         return CGSize(width: NSView.noIntrinsicMetric, height: CGFloat(hourCount) * hourHeight + Constants.paddingTop)
     }
 
@@ -461,7 +467,7 @@ public class SCKGridView: SCKView {
         return dayWidth
     }
 
-    public override func layout() {
+    open override func layout() {
         super.layout();
         let canvas = contentRect
         guard dayCount > 0 else { return } // View is not ready
@@ -473,9 +479,11 @@ public class SCKGridView: SCKView {
         let dayWidth = self.dayWidth!
 //        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
 //        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
+        self.dayColumnRectangles.removeAll(keepingCapacity: true)
 
         for day in 0..<dayCount {
-            let minX = marginLeft + CGFloat(day) * dayWidth; let midY = Constants.DayAreaHeight/2.0
+            let minX = marginLeft + (CGFloat(day) * dayWidth);
+            let midY = Constants.DayAreaHeight/2.0
             let dLabel = dayLabels[day]
             let o = CGPoint(x: minX + dayWidth/2.0 - dLabel.frame.width/2.0, y: midY - dLabel.frame.height/2.0)
             var r = CGRect(origin: o, size: dLabel.frame.size)
@@ -486,6 +494,7 @@ public class SCKGridView: SCKView {
                 mLabel.frame = CGRect(origin: mOrigin, size: mLabel.frame.size)
             }
             dLabel.frame = r
+            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
         }
 
         // Layout hour labels
@@ -522,7 +531,7 @@ public class SCKGridView: SCKView {
         }
     }
 
-    public override func resize(withOldSuperviewSize oldSize: NSSize) {
+    open override func resize(withOldSuperviewSize oldSize: NSSize) {
         super.resize(withOldSuperviewSize: oldSize) // Triggers layout. Try to acommodate hour height.
         let visibleHeight = superview!.frame.height - (Constants.paddingTop + Constants.paddingBottom)
         let contentHeight = CGFloat(hourCount) * hourHeight
@@ -531,7 +540,7 @@ public class SCKGridView: SCKView {
         }
     }
 
-    public override func viewWillMove(toSuperview newSuperview: NSView?) {
+    open override func viewWillMove(toSuperview newSuperview: NSView?) {
         // Insert day labeling view
         guard let superview = newSuperview else { return }
         let height = Constants.DayAreaHeight
@@ -633,6 +642,58 @@ public class SCKGridView: SCKView {
         return .zero
     }
 
+    // For any given date in the dateInterval, returns origin of an event scheduled at the interval
+    public func getCanvasRectForEvent(_ event: SCKEvent) -> CGRect? {
+        // Try to find the event view
+        guard let foundIndex = self.subviews.index(where: { (($0 as? SCKEventView)!.eventHolder.representedObject == event) }) else {
+            return nil
+        }
+        guard let eventView: SCKEventView = self.subviews[foundIndex] as? SCKEventView else {
+            return nil
+        }
+        return eventView.frame
+    }
+
+
+    // For any given event object, returns the corresponding view if it exists.
+    public func getEventViewForEvent(_ event: SCKEvent) -> SCKEventView? {
+        // Try to find the event view
+        guard let foundIndex = self.subviews.index(where: { (($0 as? SCKEventView)!.eventHolder.representedObject == event) }) else {
+            return nil
+        }
+        guard let eventView: SCKEventView = self.subviews[foundIndex] as? SCKEventView else {
+            return nil
+        }
+        return eventView
+    }
+
+
+
+
+
+
+    // For any given date in the dateInterval, returns origin of an event scheduled at the interval
+    public func getCanvasPositionForDate(_ date: Date) -> CGPoint {
+        let canvas = contentRect
+        let dayWidth: CGFloat = canvas.width / CGFloat(dayCount)
+        let offsetPerDay = 1.0/Double(dayCount)
+        /// The relative start time of the event in the `scheduleView` date bounds.
+        let relativeStart = self.calculateRelativeTimeLocation(for: date)
+        let day = Int(trunc(relativeStart/offsetPerDay))
+        let sPoint = SCKDayPoint(date: date)
+        let eMinute = sPoint.minute
+        let ePoint = SCKDayPoint(hour: sPoint.hour, minute: eMinute, second: sPoint.second)
+        var newOrigin: CGPoint = CGPoint.zero
+        newOrigin.y = yFor(hour: sPoint.hour, minute: sPoint.minute)
+        newOrigin.x = canvas.minX + CGFloat(day) * dayWidth
+        return newOrigin
+    }
+
+
+
+
+
+
     // MARK: - Minute timer
 
     /// A timer that fires every minute to mark the view as needing display in order to update the "now" line.
@@ -649,7 +710,7 @@ public class SCKGridView: SCKView {
 
     // MARK: - Drawing
 
-    public override func draw(_ dirtyRect: NSRect) {
+    open override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         guard hourCount > 0 else { return }
         drawUnavailableTimeRanges()
@@ -659,14 +720,13 @@ public class SCKGridView: SCKView {
         drawDraggingGuidesIfNeeded()
     }
 
-    private func drawUnavailableTimeRanges() {
+    open func drawUnavailableTimeRanges() {
         self.unavailableTimeRangesColor.set()
         unavailableTimeRanges.forEach { rectForUnavailableTimeRange($0).fill() }
     }
 
-    private func drawDayDelimiters() {
-        let canvas = CGRect(x: Constants.HourAreaWidth, y: Constants.DayAreaHeight,
-                            width: frame.width-Constants.HourAreaWidth, height: frame.height-Constants.DayAreaHeight)
+    open func drawDayDelimiters() {
+        let canvas = CGRect(x: Constants.HourAreaWidth, y: Constants.DayAreaHeight, width: frame.width-Constants.HourAreaWidth, height: frame.height-Constants.DayAreaHeight)
         let dayWidth = canvas.width / CGFloat(dayCount)
         self.dayDelimetersColor.set()
         //NSColor(deviceWhite: 0.95, alpha: 1.0).set()
@@ -675,7 +735,7 @@ public class SCKGridView: SCKView {
         }
     }
 
-    private func drawHourDelimiters() {
+    open func drawHourDelimiters() {
         self.hourDelimetersColor.set()
         for hour in 0..<hourCount {
             CGRect(x: contentRect.minX-8.0, y: contentRect.minY + CGFloat(hour) * hourHeight - 0.4,
@@ -683,7 +743,7 @@ public class SCKGridView: SCKView {
         }
     }
 
-    private func drawCurrentTimeLine() {
+    open func drawCurrentTimeLine() {
         let canvas = contentRect
         let components = sharedCalendar.dateComponents([.hour, .minute], from: Date())
         let minuteCount = Double(hourCount) * 60.0
@@ -694,7 +754,7 @@ public class SCKGridView: SCKView {
         NSBezierPath(ovalIn: CGRect(x: canvas.minX-2.0, y: yOrigin-2.0, width: 4.0, height: 4.0)).fill()
     }
 
-    private func drawDraggingGuidesIfNeeded() {
+    open func drawDraggingGuidesIfNeeded() {
         guard let dV = eventViewBeingDragged else {return}
         (dV.backgroundColor ?? NSColor.darkGray).setFill()
 
@@ -765,7 +825,7 @@ extension SCKGridView {
         processNewHourHeight(hourHeight - 8.0)
     }
 
-    public override func magnify(with event: NSEvent) {
+    open override func magnify(with event: NSEvent) {
         processNewHourHeight(hourHeight + 16.0 * event.magnification)
     }
 
@@ -790,7 +850,7 @@ extension SCKGridView {
 
 extension SCKGridView {
 
-    public func zoomOut() {
+    open func zoomOut() {
         self.processNewHourHeight(-1000.0)
     }
 }
