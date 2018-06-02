@@ -29,13 +29,11 @@ import Cocoa
 /// Instances of this class work in conjunction with an `SCKEventView` and 
 /// represent an object conforming to the `SCKEvent` protocol. These objects are
 /// automatically created by the `SCKViewController` reloadData methods.
-internal final class SCKEventHolder: NSObject {
+open class SCKEventHolder: NSObject {
 
     // For any event of duration less than the set minimum, it will draw as if it were the minimum duration instead.
     // This prevents not being able to read the text or see the event view because the duration is too small.
-    internal var minimumEventDisplayDuration: Int {
-        return 30
-    }
+    open var minimumEventDisplayDuration: Int { return 30 }
 
     /// Initializes a new instance representing a given event object associated
     /// with a concrete `SCKEventView`, managed by the same controller. Returns
@@ -47,7 +45,7 @@ internal final class SCKEventHolder: NSObject {
     ///           view hierarchy at this point.
     ///   - controller: The `SCKViewController` instance managing this holder.
     ///
-    init?(event: SCKEvent, view: SCKEventView, controller: SCKViewController) {
+    public init?(event: SCKEvent, view: SCKEventView, controller: SCKViewController) {
         representedObject = event
         cachedDuration = event.duration
         cachedScheduledDate = event.scheduledDate
@@ -77,13 +75,14 @@ internal final class SCKEventHolder: NSObject {
     // MARK: - Object state
 
     /// The event object backed by this event holder. Cannot be changed.
-    let representedObject: SCKEvent
+    open let representedObject: SCKEvent
 
     /// A reference to the `SCKEventView` associated with this event holder.
-    private(set) weak var eventView: SCKEventView?
+//    internal(set) weak var eventView: SCKEventView?
+    open weak var eventView: SCKEventView?
 
     /// A convenience reference to the controller that created this holder.
-    private weak var controller: SCKViewController?
+    open weak var controller: SCKViewController?
 
     // MARK: Cached properties
 
@@ -93,37 +92,37 @@ internal final class SCKEventHolder: NSObject {
 
     /// A local copy of the represented object's duration. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedDuration: Int
+    open var cachedDuration: Int
 
     /// A local copy of the represented object's date. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedScheduledDate: Date
+    open var cachedScheduledDate: Date
 
     /// A local copy of the represented object's title. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedTitle: String
+    open var cachedTitle: String
 
     /// A local copy of the represented object's user. It is automatically
     /// uppdated when observed changes from the represented object are processed.
     /// - Note: We observe the user instead of her color directly to make sure
     ///         the user changes trigger a notification.
-    internal weak var cachedUser: SCKUser?
+    open weak var cachedUser: SCKUser?
 
     // MARK: Relative properties
 
     /// The relative start time of the event in the `scheduleView` date bounds.
-    internal var relativeStart = SCKRelativeTimeLocationInvalid
+    open var relativeStart = SCKRelativeTimeLocationInvalid
 
     /// The relative end time of the event in the `scheduleView` date bounds.
-    internal var relativeEnd = SCKRelativeTimeLocationInvalid
+    open var relativeEnd = SCKRelativeTimeLocationInvalid
 
     /// The relative duration of the event in the `scheduleView` date bounds.
-    internal var relativeLength = SCKRelativeTimeLengthInvalid
+    open var relativeLength = SCKRelativeTimeLengthInvalid
 
-    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil
+    open var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil
 
     /// Indicates whether relative values are valid or not, thus if layout is safe.
-    private(set) var isReady: Bool = false
+    internal(set) var isReady: Bool = false
 
     /// Invalidates the holder's cached properties and recalculates them by
     /// comparing the values from the represented object's `duration` and
@@ -138,7 +137,7 @@ internal final class SCKEventHolder: NSObject {
     /// - Note: This method is not called automatically when the schedule view
     ///         date bounds change, since the respective reloadData method is
     ///         called instead.
-    internal func recalculateRelativeValues() {
+    open func recalculateRelativeValues() {
         // If view is not set, then do nothing.
         guard let rootView = eventView?.scheduleView else { return }
         let convertedRelativeMinimumHeight: SCKRelativeTimeLength = SCKRelativeTimeLength(self.minimumEventDisplayDuration)
@@ -243,23 +242,23 @@ internal final class SCKEventHolder: NSObject {
     // MARK: - Conflict tracking
 
     /// The number of events in conflict with this. Includes self, so min is 1.
-    internal var conflictCount: Int = 1
+    open var conflictCount: Int = 1
 
     /// The position of this event among the events in conflict (zero based).
-    internal var conflictIndex: Int = 0
+    open var conflictIndex: Int = 0
 
     /// When observing represented object changes, the events in conflict whith
     /// this one before the actual change takes place.
-    private var previousConflicts: Set<SCKEventHolder> = []
+    open var previousConflicts: Set<SCKEventHolder> = []
 
     // MARK: - Change observing
 
     /// Set to `true` when observed changes observed from `representedObject`
     /// should be ignored (either when the schedule view itself is making the
     /// change or when the represented object is not valid anymore).
-    private var shouldIgnoreChanges: Bool = false
+    open var shouldIgnoreChanges: Bool = false
 
-    private var changeObserations = [NSKeyValueObservation]()
+    open var changeObserations = [NSKeyValueObservation]()
 
     // MARK: - State freezing
 
@@ -283,7 +282,7 @@ internal final class SCKEventHolder: NSObject {
     /// changes observed from the represented object until `unfreeze()` is called.
     /// Called by the schedule view during relayout and dragging operations to
     /// preserve data integrity.
-    internal func freeze() {
+    public func freeze() {
         guard !isFrozen else {
             print("Warning: Called freeze() on an already frozen holder.")
             return
@@ -295,7 +294,7 @@ internal final class SCKEventHolder: NSObject {
     /// any pending changes cached while the object was frozen. Called by the 
     /// schedule view during relayout and dragging operations to preserve data 
     /// integrity.
-    internal func unfreeze() {
+    public func unfreeze() {
         guard isFrozen else {
             print("Warning: Called unfreeze() on an already unfrozen holder.")
             return
@@ -311,7 +310,7 @@ internal final class SCKEventHolder: NSObject {
 }
 
 // MARK: - Change observation
-internal extension SCKEventHolder {
+public extension SCKEventHolder {
     /// A wrapper around a deferred change from the `representedObject`.
     private struct DelayedChange {
         /// The changed key path.
@@ -338,13 +337,13 @@ internal extension SCKEventHolder {
     /// called by the event view when commiting a dragging operation to avoid
     /// observing its own changes. It's also called before deallocation when the
     /// controller discards it during a reload data phase.
-    internal func stopObservingRepresentedObjectChanges() {
+    public func stopObservingRepresentedObjectChanges() {
         shouldIgnoreChanges = true
     }
 
     /// Stops ignoring changes observed from `representedObject`. This method is
     /// called by the event view after commiting a dragging operation.
-    internal func resumeObservingRepresentedObjectChanges() {
+    public func resumeObservingRepresentedObjectChanges() {
         shouldIgnoreChanges = false
     }
 

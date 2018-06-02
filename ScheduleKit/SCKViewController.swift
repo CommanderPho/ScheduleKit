@@ -26,8 +26,6 @@
 
 import AppKit
 
-
-
 /// A NSViewController subclass that sets up a schedule view embedded in a scroll
 /// view and displays a set of events within a day or a week time interval. The
 /// SCKViewController implements all the event processing and conflict handling
@@ -69,7 +67,7 @@ import AppKit
     }
 
     /// The scroll view managed by the controller.
-    @objc public private(set) var scrollView: NSScrollView = {
+    @objc open internal(set) var scrollView: NSScrollView = {
         let sV = NSScrollView(frame: .zero)
         sV.autoresizingMask = [.width, .height]
         sV.hasVerticalScroller = true
@@ -77,10 +75,10 @@ import AppKit
     }()
 
     /// The schedule view managed by the controller
-    @objc open private(set) var scheduleView: SCKView!
+    @objc open internal(set) var scheduleView: SCKView!
 
     /// Installs a new schedule view as the scroll view's document view, according to the value set in `mode`.
-    private func setUpScheduleView() {
+    open func setUpScheduleView() {
         let oldDelegate = scheduleView?.delegate
         let oldColorDelegate = scheduleView?.colorManagingDelegate
         let oldLabelDelegate = scheduleView?.labelManagingDelegate
@@ -95,17 +93,16 @@ import AppKit
         case .month:
             sView = SCKMonthView(frame: f)
         }
-//        let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
-        scrollView.documentView?.removeFromSuperview()
-        scheduleView = nil
-        scheduleView = sView
+        self.scrollView.documentView?.removeFromSuperview()
+        self.scheduleView = nil
+        self.scheduleView = sView
         sView.controller = self
         sView.delegate = oldDelegate
         sView.colorManagingDelegate = oldColorDelegate
         sView.labelManagingDelegate = oldLabelDelegate
         sView.layoutManagingDelegate = oldLayoutDelegate
         sView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.documentView = scheduleView
+        self.scrollView.documentView = scheduleView
         let p = sView.superview!
         NSLayoutConstraint.activate([
             sView.leadingAnchor.constraint(equalTo: p.leadingAnchor),
@@ -126,9 +123,6 @@ import AppKit
     }
 
 
-    func setupDefaultAppropriateDateInterval(forMode: SCKViewControllerMode) {
-
-    }
 
     // MARK: - View lifecycle
 
@@ -137,13 +131,14 @@ import AppKit
         // Install the scroll view and the schedule view
         scrollView.frame = CGRect(origin: CGPoint.zero, size: view.frame.size)
         view.addSubview(scrollView, positioned: .below, relativeTo: nil)
-        setUpScheduleView()
+        self.setUpScheduleView()
     }
 
     // MARK: - Event management
 
     /// The set of event holders backing the events managed by this controller.
-    private(set) var eventHolders: Set<SCKEventHolder> = []
+//    private(set) var eventHolders: Set<SCKEventHolder> = []
+    open var eventHolders: Set<SCKEventHolder> = []
 
     /// The object that works as the data source and delegate for this controller. A common implementation when
     /// subclassing `SCKViewController` is to make the subclass conform to either `SCKEventManaging` or
@@ -153,10 +148,10 @@ import AppKit
     public weak var eventManager: SCKEventManaging?
 
     // Set to true when `reloadData()` or `reloadData(ofConcreteType:)` have been called at least once.
-    private var _hasLoadedEventsAtLeastOnce: Bool = false
+    open var _hasLoadedEventsAtLeastOnce: Bool = false
 
     // Set to true when working with an event manager conforming to `SCKConcreteEventManaging`.
-    private var _eventManagerIsConcrete: Bool = false
+    open var _eventManagerIsConcrete: Bool = false
 
     /// Triggers a synchronous or asynchronous event fetch operation on the event manager object. The used method
     /// will depend on the value of the `loadsEventsAsynchronously` property.
@@ -212,7 +207,7 @@ import AppKit
     /// - Parameters:
     ///   - asynchronouslyLoadedEvents: The fetched events.
     ///   - request: The event request that was completed.
-    public final func parseData(in asynchronouslyLoadedEvents: [SCKEvent], from request: SCKEventRequest) {
+    open func parseData(in asynchronouslyLoadedEvents: [SCKEvent], from request: SCKEventRequest) {
         guard scheduleView != nil && !scheduleView.isInvalidatingLayout else {
             NSLog("Waiting for relayout to terminate before reloading data")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
@@ -269,8 +264,10 @@ import AppKit
 
     /// A reference to the events loaded in the last fetch that is compared to the newly loaded ones to determine
     /// if both sets are equal and thus, the event processing is innecessary.
-    private var _lastFetch: NSPointerArray = NSPointerArray.weakObjects()
-    var _invalidateLastFetch: Bool = false
+    public var _lastFetch: NSPointerArray = NSPointerArray.weakObjects()
+    public var _invalidateLastFetch: Bool = false
+
+    public var shouldForceRebuildEventViews: Bool = false
     /// The common pathway for parsing both syncrhonously and asynchronously
     /// loaded events. This method performs a series of operations:
     ///
@@ -279,11 +276,11 @@ import AppKit
     /// 2. If the sets are different, updates the _lastFecth property and continues.
     ///
     /// - Parameter events: The events to be parsed.
-    private func parseEvents(_ events: [SCKEvent]) {
+    open func parseEvents(_ events: [SCKEvent]) {
         let eventSet = NSSet(array: events)
         let fetchedEventsChanged: Bool = (eventSet != NSSet(array: _lastFetch.allObjects))
 
-        if (!self._invalidateLastFetch) {
+        if (!self.shouldForceRebuildEventViews) {
             guard fetchedEventsChanged else {
                 print("Fetched events are the same as in last fetch. Will just re-layout them.")
                 scheduleView.invalidateLayoutForAllEventViews(animated: false)
@@ -295,29 +292,29 @@ import AppKit
         }
 
         // Update last fetch
-        _lastFetch = NSPointerArray.weakObjects()
+        self._lastFetch = NSPointerArray.weakObjects()
         for e in events {
             assert(scheduleView.dateInterval.contains(e.scheduledDate), """
                 Invalid scheduledDate (\(e.scheduledDate)) for new event: \(e) in schedule view with date interval
                 \(scheduleView.dateInterval); Asynchronous: \(loadsEventsAsynchronously)
                 """)
-            _lastFetch.addPointer(Unmanaged.passUnretained(e).toOpaque())
+            self._lastFetch.addPointer(Unmanaged.passUnretained(e).toOpaque())
         }
 
         // Create a mutable copy for events to be added.
         let eventsToBeInserted = NSMutableSet(set: eventSet)
 
         // Evaluate previously created event holders
-        for existingHolder in eventHolders {
-            if eventSet.contains(existingHolder.representedObject) && existingHolder.representedObject.scheduledDate == existingHolder.cachedScheduledDate {
+        for existingHolder in self.eventHolders {
+            if (!self.shouldForceRebuildEventViews) && eventSet.contains(existingHolder.representedObject) && existingHolder.representedObject.scheduledDate == existingHolder.cachedScheduledDate {
                 // The holder's represented object is still included and has the same date. We'll reuse it.
                 eventsToBeInserted.remove(existingHolder.representedObject)
             } else {
                 // The holder's represented object is now excluded or has a different date. We'll destroy it.
                 existingHolder.stopObservingRepresentedObjectChanges()
-                scheduleView.removeEventView(existingHolder.eventView!)
+                self.scheduleView.removeEventView(existingHolder.eventView!)
                 existingHolder.eventView?.removeFromSuperview()
-                eventHolders.remove(at: eventHolders.index(of: existingHolder)!)
+                self.eventHolders.remove(at: eventHolders.index(of: existingHolder)!)
             }
         }
 
@@ -336,8 +333,8 @@ import AppKit
             else {
                 eventView = SCKEventView(frame: .zero)
             }
-            scheduleView.addSubview(eventView)
-            scheduleView.addEventView(eventView)
+            self.scheduleView.addSubview(eventView)
+            self.scheduleView.addEventView(eventView)
             if let holder = SCKEventHolder(event: e, view: eventView, controller: self) {
                 eventView.eventHolder = holder
                 eventHolders.insert(holder)
@@ -347,9 +344,12 @@ import AppKit
         }
 
         // Invalidate the view's layout.
-        scheduleView.invalidateLayoutForAllEventViews(animated: false)
+        self.scheduleView.invalidateLayoutForAllEventViews(animated: false)
         if (self._invalidateLastFetch) {
             self._invalidateLastFetch = false
+        }
+        if (self.shouldForceRebuildEventViews) {
+            self.shouldForceRebuildEventViews = false
         }
     }
 
@@ -359,7 +359,7 @@ import AppKit
     /// criteria: relativeStart > cachedTitle > description (all ordered ascending).
     /// - Parameter holder: The event holder whose values should be compared.
     /// - Returns: The resulting event holder array. It always includes `holder`.
-    internal func resolvedConflicts(for holder: SCKEventHolder) -> [SCKEventHolder] {
+    open func resolvedConflicts(for holder: SCKEventHolder) -> [SCKEventHolder] {
         let eStart = holder.relativeStart
         let eEnd = holder.relativeEnd
         let unsortedConflicts = eventHolders.filter {

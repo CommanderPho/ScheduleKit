@@ -203,14 +203,14 @@ import Cocoa
     // MARK: - Subview management
 
     /// An array containing all the event views displayed in this view.
-    private(set) var eventViews: [SCKEventView] = []
+    open var eventViews: [SCKEventView] = []
 
     /// Registers a recently created `SCKEventView` with this instance. This
     /// method is called from the controller after adding the view as a subview
     /// of this schedule view. You should not call this method directly.
     ///
     /// - Parameter eventView: The event view to be added.
-    internal final func addEventView(_ eventView: SCKEventView) {
+    open func addEventView(_ eventView: SCKEventView) {
         eventViews.append(eventView)
     }
 
@@ -220,7 +220,7 @@ import Cocoa
     ///
     /// - Parameter eventView: The event view to be removed. Must have been added
     ///                        previously via `addEventView(_:)`.
-    internal final func removeEventView(_ eventView: SCKEventView) {
+    open func removeEventView(_ eventView: SCKEventView) {
         guard let index = eventViews.index(of: eventView) else {
             Swift.print("Warning: Attempting to remove an unregistered event view")
             return
@@ -233,7 +233,7 @@ import Cocoa
     /// The portion of the view used to display events. Defaults to the full view
     /// frame. Subclasses override this property if they display additional items
     /// such as day or hour labels alongside the event views.
-    public var contentRect: CGRect {
+    open var contentRect: CGRect {
         return CGRect(origin: .zero, size: frame.size)
     }
 
@@ -262,7 +262,7 @@ import Cocoa
     /// - Parameter eventView: The event view whose frame will be updated soon.
     /// - Note: Since the event view's frame will be eventually calculated in the
     ///         `layout()` method, you must avoid changing its frame in this one.
-    func invalidateLayout(for eventView: SCKEventView) { }
+    open func invalidateLayout(for eventView: SCKEventView) { }
 
     /// Triggers a series of operations that determine the frame of an array of
     /// `SCKEventView`s according to their event holder's properties and to other
@@ -350,7 +350,7 @@ import Cocoa
     /// `scheduleController(_:didSelectEvent:)` methods on the controller`s event
     /// manager when appropiate. In addition, it marks all event views as needing
     /// display in order to make them reflect the current selection.
-    internal(set) weak var selectedEventView: SCKEventView? {
+    open weak var selectedEventView: SCKEventView? {
         willSet {
             self.willSetSelectedEventView(newValue: newValue)
         }
@@ -361,7 +361,7 @@ import Cocoa
 
     private var isBlockingSelectionDelegateCalling: Bool = false
     // Updates the event view object without calling cascading delegates
-    internal func safeUpdateSelectedEventView(_ newValue: SCKEventView?, shouldCallDelegates: Bool) {
+    open func safeUpdateSelectedEventView(_ newValue: SCKEventView?, shouldCallDelegates: Bool) {
         // Unblock delegate calling if needed
         if (!shouldCallDelegates) {
             self.isBlockingSelectionDelegateCalling = true
@@ -373,14 +373,14 @@ import Cocoa
         }
     }
 
-    private func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
+    open func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
         if selectedEventView != nil && newValue == nil {
             if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 controller.eventManager?.scheduleControllerDidClearSelection(controller)
             }
         }
     }
-    private func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
+    open func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
         for eventView in eventViews {
             eventView.needsDisplay = true
         }

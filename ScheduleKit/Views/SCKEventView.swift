@@ -26,9 +26,6 @@
 
 import Cocoa
 
-
-
-
 /// The view class used by ScheduleKit to display each event in a schedule view.
 /// This view is responsible of managing a descriptive label and also of handling
 /// mouse events, including drag and drop operations, which may derive in changes
@@ -36,7 +33,7 @@ import Cocoa
 @objc open class SCKEventView: NSView {
 
     /// The event holder represented by this view.
-    internal var eventHolder: SCKEventHolder! {
+    open var eventHolder: SCKEventHolder! {
         didSet {
             innerLabel.stringValue = eventHolder.cachedTitle
             innerLabel.textColor = self.labelTextColor
@@ -48,7 +45,7 @@ import Cocoa
     /// dragging the view from the bottom edge. The title value is updated
     /// automatically by the event holder when a change in the event's title is 
     /// observed.
-    private(set) var innerLabel: SCKTextField = {
+    internal(set) var innerLabel: SCKTextField = {
         let _label = SCKTextField(frame: .zero)
         _label.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 249), for: .horizontal)
         _label.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 249), for: .vertical)
@@ -85,13 +82,13 @@ import Cocoa
         }
     }
 
-    internal var needsTimeSubindicatorLine: Bool {
+    public var needsTimeSubindicatorLine: Bool {
         guard let validConfig = self.timeSubindicatorConfig else { return false }
 //        return validConfig.shouldDisplay
         return true
     }
 
-    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
+    public var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
         didSet {
             self.needsDisplay = true
         }
@@ -99,7 +96,7 @@ import Cocoa
 
     //internal var timeSubindicatorLineConfig
 
-    private func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
+    public func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
         guard let validConfig = self.timeSubindicatorConfig else { return }
         //let currentSize = self.frame.size
         let currentSize = dirtyRect.size
@@ -130,7 +127,7 @@ import Cocoa
         path.stroke()
     }
 
-    private var labelTextColor: NSColor {
+    public var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
         let isThisViewSelected = (scheduleView.selectedEventView == self)
         var currentOverlayColor: NSColor
@@ -167,7 +164,7 @@ import Cocoa
         return currentOverlayColor
     }
 
-    private func updateOverlayColor() {
+    public func updateOverlayColor() {
         self.innerLabel.textColor = self.labelTextColor
         self.innerLabel.setNeedsDisplay()
     }
