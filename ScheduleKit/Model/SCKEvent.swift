@@ -26,30 +26,6 @@
 
 import Cocoa
 
-/// Any type implementing the relevant methods for an `SCKEvent`'s user.
-@objc public protocol SCKUser: class {
-
-    /// The color that will be used as `SCKEventView`s background when displayed
-    /// in a `SCKView` with `colorMode` set to `.byEventOwner`.
-    @objc var eventColor: NSColor { get }
-
-    /// The color that will be used as `SCKEventView`s background when displayed
-    /// in a `SCKView` with `colorMode` set to `.byEventOwner` and currently being reducedEmphasis because other events
-    /// are selected and it isn't.
-    @objc var reducedEmphasisEventColor: NSColor { get }
-
-    
-    /// The color that will be used as `SCKEventView`s label.textcolor when displayed
-    /// in a `SCKView` with `colorMode` set to `.byEventOwner`
-    @objc var eventOverlayColor: NSColor { get }
-
-    /// The color that will be used as `SCKEventView`s label.textcolor when displayed
-    /// in a `SCKView` with `colorMode` set to `.byEventOwner` and currently being reducedEmphasis because other events
-    /// are selected and it isn't.
-    @objc var reducedEmphasisEventOverlayColor: NSColor { get }
-}
-
-
 /// Any type implementing the properties required to define an event displayed in
 /// a `SCKView` subclass.
 @objc public protocol SCKEvent: NSObjectProtocol where Self: NSObject {
@@ -77,12 +53,6 @@ import Cocoa
     /// The user object associated with the event, also referred as the event's
     /// owner.
     @objc var user: SCKUser { get }
-}
-
-
-public func ==(lhs: SCKUser, rhs: SCKUser) -> Bool {
-    if (lhs.eventColor != rhs.eventColor) { return false }
-    return true
 }
 
 public func ==(lhs: SCKEvent, rhs: SCKEvent) -> Bool {

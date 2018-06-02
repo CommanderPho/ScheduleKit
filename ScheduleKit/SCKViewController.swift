@@ -26,13 +26,7 @@
 
 import AppKit
 
-/// The date interval mode for a SCKViewController.
-@objc public enum SCKViewControllerMode: Int {
-    /// The controller works with a single day date interval.
-    case day
-    /// The controller works with a week date interval.
-    case week
-}
+
 
 /// A NSViewController subclass that sets up a schedule view embedded in a scroll
 /// view and displays a set of events within a day or a week time interval. The
@@ -69,6 +63,7 @@ import AppKit
         didSet { // If value changed and a view was already installed, replace it.
             if mode != oldValue && isViewLoaded {
                 setUpScheduleView()
+                self.scheduleView.dateInterval = mode.defaultInterval
             }
         }
     }
@@ -91,7 +86,16 @@ import AppKit
         let oldLabelDelegate = scheduleView?.labelManagingDelegate
         let oldLayoutDelegate = scheduleView?.layoutManagingDelegate
         let f = CGRect(origin: CGPoint.zero, size: scrollView.contentSize)
-        let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
+        let sView: SCKGridView
+        switch mode {
+        case .day:
+            sView = SCKDayView(frame: f)
+        case .week:
+            sView = SCKWeekView(frame: f)
+        case .month:
+            sView = SCKMonthView(frame: f)
+        }
+//        let sView = (mode == .day) ? SCKDayView(frame: f) : SCKWeekView(frame: f)
         scrollView.documentView?.removeFromSuperview()
         scheduleView = nil
         scheduleView = sView
@@ -108,6 +112,22 @@ import AppKit
             sView.trailingAnchor.constraint(equalTo: p.trailingAnchor),
             sView.topAnchor.constraint(equalTo: p.topAnchor)
         ])
+    }
+
+
+    @objc open func resetScheduleView() {
+        if self.isViewLoaded {
+            self.setUpScheduleView()
+        }
+    }
+
+    @objc open func rebuildAllEvents() {
+        self._invalidateLastFetch = true
+    }
+
+
+    func setupDefaultAppropriateDateInterval(forMode: SCKViewControllerMode) {
+
     }
 
     // MARK: - View lifecycle
@@ -250,7 +270,7 @@ import AppKit
     /// A reference to the events loaded in the last fetch that is compared to the newly loaded ones to determine
     /// if both sets are equal and thus, the event processing is innecessary.
     private var _lastFetch: NSPointerArray = NSPointerArray.weakObjects()
-
+    var _invalidateLastFetch: Bool = false
     /// The common pathway for parsing both syncrhonously and asynchronously
     /// loaded events. This method performs a series of operations:
     ///
@@ -261,11 +281,19 @@ import AppKit
     /// - Parameter events: The events to be parsed.
     private func parseEvents(_ events: [SCKEvent]) {
         let eventSet = NSSet(array: events)
-        guard eventSet != NSSet(array: _lastFetch.allObjects) else {
-            print("Fetched events are the same as in last fetch. Will just re-layout them.")
-            scheduleView.invalidateLayoutForAllEventViews(animated: false)
-            return
+        let fetchedEventsChanged: Bool = (eventSet != NSSet(array: _lastFetch.allObjects))
+
+        if (!self._invalidateLastFetch) {
+            guard fetchedEventsChanged else {
+                print("Fetched events are the same as in last fetch. Will just re-layout them.")
+                scheduleView.invalidateLayoutForAllEventViews(animated: false)
+                return
+            }
         }
+        else {
+            print("Rebuilding last fetch because self._invalidateLastFetch is true!")
+        }
+
         // Update last fetch
         _lastFetch = NSPointerArray.weakObjects()
         for e in events {
@@ -297,6 +325,7 @@ import AppKit
         for e in (eventsToBeInserted.compactMap { $0 as? SCKEvent }) {
             let eventView: SCKEventView
             if let validEventManager = self.eventManager {
+                // Here is where we call the delegate
                 if let validCustomEventView = validEventManager.scheduleController(self, viewForEvent: e) {
                     eventView = validCustomEventView
                 }
@@ -307,7 +336,6 @@ import AppKit
             else {
                 eventView = SCKEventView(frame: .zero)
             }
-
             scheduleView.addSubview(eventView)
             scheduleView.addEventView(eventView)
             if let holder = SCKEventHolder(event: e, view: eventView, controller: self) {
@@ -320,6 +348,9 @@ import AppKit
 
         // Invalidate the view's layout.
         scheduleView.invalidateLayoutForAllEventViews(animated: false)
+        if (self._invalidateLastFetch) {
+            self._invalidateLastFetch = false
+        }
     }
 
     // MARK: - Conflict handling
@@ -355,6 +386,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.decreaseDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.decreaseWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.decreaseMonthOffset(sender)
         }
     }
 
@@ -364,6 +396,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.increaseDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.increaseWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.increaseMonthOffset(sender)
         }
     }
 
@@ -373,6 +406,7 @@ import AppKit
         switch mode {
         case .day:  (scheduleView as? SCKDayView)?.resetDayOffset(sender)
         case .week: (scheduleView as? SCKWeekView)?.resetWeekOffset(sender)
+        case .month: (scheduleView as? SCKMonthView)?.resetMonthOffset(sender)
         }
     }
 

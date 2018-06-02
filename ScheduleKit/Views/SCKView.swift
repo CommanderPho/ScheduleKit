@@ -38,7 +38,7 @@ import Cocoa
 ///
 /// - Note: Do not instantiate this class directly.
 ///
-@objc public class SCKView: NSView {
+@objc open class SCKView: NSView {
 
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -115,7 +115,7 @@ import Cocoa
         return true
     }
 
-    public override func draw(_ dirtyRect: NSRect) {
+    open override func draw(_ dirtyRect: NSRect) {
         if let validColorDelegate = self.colorManagingDelegate {
             validColorDelegate.backgroundColor.setFill()
         }
@@ -143,7 +143,7 @@ import Cocoa
     /// - Note: Seconds are rounded to the next minute.
     /// - Returns: The calculated date or `nil` if `relativeTimeLocation` is not
     ///            a value compressed between 0.0 and 1.0.
-    final func calculateDate(for relativeTimeLocation: SCKRelativeTimeLocation) -> Date? {
+    public final func calculateDate(for relativeTimeLocation: SCKRelativeTimeLocation) -> Date? {
         guard relativeTimeLocation >= 0.0 && relativeTimeLocation <= 1.0 else {
             return nil
         }
@@ -164,7 +164,7 @@ import Cocoa
     ///            of `date` in the schedule view's date interval; or 
     ///            `SCKRelativeTimeLocationInvalid` if `date` is not contained in
     ///            that interval.
-    final func calculateRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
+    public final func calculateRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
         guard dateInterval.contains(date) else {
             return SCKRelativeTimeLocationInvalid
         }
@@ -173,17 +173,17 @@ import Cocoa
         return (dateRef - startDateRef) / dateInterval.duration
     }
 
-    final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
-        let size = self.contentRect.size
-        let totalHight: CGFloat = size.height
-        if (totalHight <= 0.0) {
-            return SCKRelativeTimeLengthInvalid
-        }
-        else {
-            let percentHeight = height / totalHight
-            return SCKRelativeTimeLength(percentHeight)
-        }
-    }
+//    public final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
+//        let size = self.contentRect.size
+//        let totalHight: CGFloat = size.height
+//        if (totalHight <= 0.0) {
+//            return SCKRelativeTimeLengthInvalid
+//        }
+//        else {
+//            let percentHeight = height / totalHight
+//            return SCKRelativeTimeLength(percentHeight)
+//        }
+//    }
 
     /// Calculates the relative time location in the view's date interval for a
     /// given point in the view's coordinate system. The default implementation
@@ -194,7 +194,7 @@ import Cocoa
     /// - Returns: A value between 0.0 and 1.0 representing the relative time
     ///            location for the given point, or `SCKRelativeTimeLocationInvalid`
     ///            in case `point` falls out of the view's content rect.
-    func relativeTimeLocation(for point: CGPoint) -> SCKRelativeTimeLocation {
+    public func relativeTimeLocation(for point: CGPoint) -> SCKRelativeTimeLocation {
         return SCKRelativeTimeLocationInvalid
     }
 
@@ -244,13 +244,13 @@ import Cocoa
 
     /// Override this method to perform additional tasks before the layout
     /// invalidation takes place. If you do so, don't forget to call super.
-    public func beginLayoutInvalidation() {
+    open func beginLayoutInvalidation() {
         isInvalidatingLayout = true
     }
 
     /// Override this method to perform additional tasks after the layout
     /// invalidation has finished. If you do so, don't forget to call super.
-    public func endLayoutInvalidation() {
+    open func endLayoutInvalidation() {
         isInvalidatingLayout = false
     }
 
@@ -278,7 +278,7 @@ import Cocoa
     ///   - eventViews: The array of event views to be laid out.
     ///   - animated: Pass true to perform an animated subview layout.
     ///
-    public final func invalidateLayout(for eventViews: [SCKEventView], animated: Bool = false) {
+    open func invalidateLayout(for eventViews: [SCKEventView], animated: Bool = false) {
         guard !isInvalidatingLayout else {
             Swift.print("Warning: Invalidation already triggered")
             return
@@ -321,7 +321,7 @@ import Cocoa
     /// A convenience method to trigger layout invalidation for all event views.
     ///
     /// - Parameter animated: Pass true to perform an animated subview layout.
-    public final func invalidateLayoutForAllEventViews(animated: Bool = false) {
+    open func invalidateLayoutForAllEventViews(animated: Bool = false) {
         invalidateLayout(for: eventViews, animated: animated)
     }
 
@@ -366,9 +366,7 @@ import Cocoa
         if (!shouldCallDelegates) {
             self.isBlockingSelectionDelegateCalling = true
         }
-
         self.selectedEventView = newValue
-
         // Unblock delegate calling if needed
         if (!shouldCallDelegates && self.isBlockingSelectionDelegateCalling) {
             self.isBlockingSelectionDelegateCalling = false
@@ -396,7 +394,7 @@ import Cocoa
     }
 
 
-    public func select(event: SCKEvent, shouldCallDelegates: Bool) {
+    open func select(event: SCKEvent, shouldCallDelegates: Bool) {
         if let validEventViewIndex = self.eventViews.index(where: { $0.eventHolder.representedObject == event }) {
             self.select(withEventIndex: validEventViewIndex, shouldCallDelegates: shouldCallDelegates)
         }
@@ -406,7 +404,7 @@ import Cocoa
         }
     }
 
-    public func select(withEventIndex index: Int, shouldCallDelegates: Bool) {
+    open func select(withEventIndex index: Int, shouldCallDelegates: Bool) {
         if (index >= 0) && (index < self.eventViews.count) {
             self.safeUpdateSelectedEventView(self.eventViews[index], shouldCallDelegates: shouldCallDelegates)
         }
@@ -415,13 +413,13 @@ import Cocoa
         }
     }
 
-    public func clearSelection(shouldCallDelegates: Bool) {
+    open func clearSelection(shouldCallDelegates: Bool) {
         self.safeUpdateSelectedEventView(nil, shouldCallDelegates: shouldCallDelegates)
     }
 
 
 
-    public override func mouseDown(with event: NSEvent) {
+    open override func mouseDown(with event: NSEvent) {
         // Called when user clicks on an empty space.
         // Deselect selected event view if any
         selectedEventView = nil

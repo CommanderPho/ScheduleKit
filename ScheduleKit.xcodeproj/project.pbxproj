@@ -64,9 +64,15 @@
 		99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */; };
 		99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */; };
 		99F4DDEC1E5DAF9F00D7A161 /* SCKEventRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */; };
+		D7399A0820C2391700F6F2C4 /* SCKViewControllerMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7399A0720C2391700F6F2C4 /* SCKViewControllerMode.swift */; };
 		D787767D20B861FC0027894A /* SCKViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D787767C20B861FC0027894A /* SCKViewDelegate.swift */; };
 		D787767F20B8631F0027894A /* SCKGridViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */; };
 		D78776A820B8C8CD0027894A /* SCKEventTimeSubindicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776A720B8C8CD0027894A /* SCKEventTimeSubindicator.swift */; };
+		D78776AC20B90FA20027894A /* SCKMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776AB20B90FA20027894A /* SCKMonthView.swift */; };
+		D78776B220B932860027894A /* SCKLayoutConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776B120B932860027894A /* SCKLayoutConstants.swift */; };
+		D78776B620B932DA0027894A /* LabelType.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776B520B932DA0027894A /* LabelType.swift */; };
+		D78776B820B9333D0027894A /* SCKEventColorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776B720B9333D0027894A /* SCKEventColorMode.swift */; };
+		D78776BA20B933830027894A /* SCKUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78776B920B933830027894A /* SCKUser.swift */; };
 		D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */; };
 		D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */; };
 		D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7911583209710E70026DD1F /* SCKLayoutManaging.swift */; };
@@ -189,9 +195,15 @@
 		99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKDayView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = SCKWeekView.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		99F4DDEB1E5DAF9F00D7A161 /* SCKEventRequestTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SCKEventRequestTests.swift; sourceTree = "<group>"; };
+		D7399A0720C2391700F6F2C4 /* SCKViewControllerMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKViewControllerMode.swift; sourceTree = "<group>"; };
 		D787767C20B861FC0027894A /* SCKViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKViewDelegate.swift; sourceTree = "<group>"; };
 		D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKGridViewDelegate.swift; sourceTree = "<group>"; };
 		D78776A720B8C8CD0027894A /* SCKEventTimeSubindicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKEventTimeSubindicator.swift; sourceTree = "<group>"; };
+		D78776AB20B90FA20027894A /* SCKMonthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKMonthView.swift; sourceTree = "<group>"; };
+		D78776B120B932860027894A /* SCKLayoutConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLayoutConstants.swift; sourceTree = "<group>"; };
+		D78776B520B932DA0027894A /* LabelType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelType.swift; sourceTree = "<group>"; };
+		D78776B720B9333D0027894A /* SCKEventColorMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKEventColorMode.swift; sourceTree = "<group>"; };
+		D78776B920B933830027894A /* SCKUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKUser.swift; sourceTree = "<group>"; };
 		D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKColorManaging.swift; sourceTree = "<group>"; };
 		D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLabelManaging.swift; sourceTree = "<group>"; };
 		D7911583209710E70026DD1F /* SCKLayoutManaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SCKLayoutManaging.swift; sourceTree = "<group>"; };
@@ -296,6 +308,7 @@
 				999717291DC3784A009BB046 /* SCKGridView.swift */,
 				99F1FF8A1DC4E9F80055C3E4 /* SCKDayView.swift */,
 				99F1FF8C1DC4F9DD0055C3E4 /* SCKWeekView.swift */,
+				D78776AB20B90FA20027894A /* SCKMonthView.swift */,
 			);
 			name = "Schedule views";
 			sourceTree = "<group>";
@@ -352,10 +365,10 @@
 		99E7D0A31A4AF3B500713F18 /* ScheduleKit */ = {
 			isa = PBXGroup;
 			children = (
+				D78776B420B932CB0027894A /* Enumerations */,
 				D79115822097057E0026DD1F /* Protocols */,
 				99E7D0A61A4AF3B500713F18 /* ScheduleKit.h */,
 				99BA3AC21DBF800E00A6FB33 /* BaseDefinitions.swift */,
-				99BA3ABE1DBF709C00A6FB33 /* SCKEvent.swift */,
 				99E7D0C41A4B014900713F18 /* Categories and subclasses */,
 				99E7D0CD1A4B3C2400713F18 /* Model */,
 				99E7D0C21A4AF64500713F18 /* Views */,
@@ -394,6 +407,9 @@
 		99E7D0CD1A4B3C2400713F18 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				99BA3ABE1DBF709C00A6FB33 /* SCKEvent.swift */,
+				D78776B920B933830027894A /* SCKUser.swift */,
+				D78776B120B932860027894A /* SCKLayoutConstants.swift */,
 				D78776A720B8C8CD0027894A /* SCKEventTimeSubindicator.swift */,
 				99BA3AC01DBF73DF00A6FB33 /* SCKDayPoint.swift */,
 				99BA3AC41DBF814800A6FB33 /* SCKUnavailableTimeRange.swift */,
@@ -409,6 +425,16 @@
 				D787767E20B8631F0027894A /* SCKGridViewDelegate.swift */,
 			);
 			name = SCKViewDelegates;
+			sourceTree = "<group>";
+		};
+		D78776B420B932CB0027894A /* Enumerations */ = {
+			isa = PBXGroup;
+			children = (
+				D7399A0720C2391700F6F2C4 /* SCKViewControllerMode.swift */,
+				D78776B720B9333D0027894A /* SCKEventColorMode.swift */,
+				D78776B520B932DA0027894A /* LabelType.swift */,
+			);
+			name = Enumerations;
 			sourceTree = "<group>";
 		};
 		D79115822097057E0026DD1F /* Protocols */ = {
@@ -679,14 +705,17 @@
 			files = (
 				99BA3AC51DBF814800A6FB33 /* SCKUnavailableTimeRange.swift in Sources */,
 				996020CB1DF7075400BDD901 /* SCKConcreteEventManaging.swift in Sources */,
+				D78776B620B932DA0027894A /* LabelType.swift in Sources */,
 				99F1FF8B1DC4E9F80055C3E4 /* SCKDayView.swift in Sources */,
 				99BA3AC11DBF73DF00A6FB33 /* SCKDayPoint.swift in Sources */,
 				99F1FF8D1DC4F9DD0055C3E4 /* SCKWeekView.swift in Sources */,
 				D79115812096FB2A0026DD1F /* SCKLabelManaging.swift in Sources */,
 				9982601F1DDB3DAD00C46586 /* SCKEventManaging.swift in Sources */,
+				D78776BA20B933830027894A /* SCKUser.swift in Sources */,
 				D787767F20B8631F0027894A /* SCKGridViewDelegate.swift in Sources */,
 				9997172A1DC3784A009BB046 /* SCKGridView.swift in Sources */,
 				999950971D8EE25A00128669 /* SCKEventView.swift in Sources */,
+				D78776B220B932860027894A /* SCKLayoutConstants.swift in Sources */,
 				99BA3AC31DBF800E00A6FB33 /* BaseDefinitions.swift in Sources */,
 				999950991D8F216600128669 /* SCKView.swift in Sources */,
 				D7911584209710E70026DD1F /* SCKLayoutManaging.swift in Sources */,
@@ -698,8 +727,11 @@
 				99CAFCF51DCA039F004502AA /* SCKViewController.swift in Sources */,
 				99B577DC1DC61A870010A6A5 /* SCKTextField.swift in Sources */,
 				9932BD681DFD643E002ED213 /* SCKFreeTimeFinder.swift in Sources */,
+				D7399A0820C2391700F6F2C4 /* SCKViewControllerMode.swift in Sources */,
+				D78776B820B9333D0027894A /* SCKEventColorMode.swift in Sources */,
 				D791157F2096EE5C0026DD1F /* SCKColorManaging.swift in Sources */,
 				D78776A820B8C8CD0027894A /* SCKEventTimeSubindicator.swift in Sources */,
+				D78776AC20B90FA20027894A /* SCKMonthView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
