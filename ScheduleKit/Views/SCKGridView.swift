@@ -387,22 +387,104 @@ open class SCKGridView: SCKView {
 
     // MARK: - Date transform additions
 
+    // Converts between a DateInterval relative time location and a day relative time location
+    public final func convertToDayRelative(totalRelativeTimeLocation: SCKRelativeTimeLocation) -> (dayIndex: Int, dayRelative: SCKRelativeTimeLocation)? {
+        if (totalRelativeTimeLocation == SCKRelativeTimeLocationInvalid) { return nil }
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay: Double = 1.0 / Double(self.dayCount)
+        let totalMinutesPerDay: Double = 60.0 * Double(self.hourCount)
+        // day: The integer day index to which the point belongs
+        let day: Int = Int(trunc(totalRelativeTimeLocation/offsetPerDay))
+        // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
+        let dayStartOffset: Double = offsetPerDay * Double(day)
+
+        let remainder: Double = totalRelativeTimeLocation - dayStartOffset
+        // inverseResult is in seconds
+        let inverseResult: Double = (self.dateInterval.duration * remainder)
+        let inverseResultMinutes: Double = inverseResult * Double(60.0)
+        let result: SCKRelativeTimeLocation = (inverseResultMinutes / totalMinutesPerDay)
+        return (day, result)
+    }
+
+
+
+
+//    public final func calculateDayRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
+//        guard dateInterval.contains(date) else { return SCKRelativeTimeLocationInvalid; }
+//        let dateRef = date.timeIntervalSinceReferenceDate
+//        let startDateRef = dateInterval.start.timeIntervalSinceReferenceDate
+//        return (dateRef - startDateRef) / dateInterval.duration
+//    }
+
 
     // Given any point within the rectangle, determines the time it should occur on.
     override open func relativeTimeLocation(for point: CGPoint) -> Double {
         if contentRect.contains(point) {
+            // dayWidth: The screen width of each day
             let dayWidth: CGFloat = contentRect.width / CGFloat(dayCount)
+            // offsetPerDay: Gives the relative offset at the start of each day.
             let offsetPerDay = 1.0 / Double(dayCount)
+            // day: The integer day index to which the point belongs
             let day = Int(trunc((point.x-contentRect.minX)/dayWidth))
+            // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
             let dayOffset = offsetPerDay * Double(day)
+
+            // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+            // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
             let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+            // offsetPerHour: Gives the relative offset (length) for each hour.
             let offsetPerHour = 60.0 * offsetPerMin
-            let totalMinutes = 60.0 * CGFloat(hourCount)
-            let minute = totalMinutes * (point.y - contentRect.minY) / contentRect.height
+            let totalMinutesPerDay = 60.0 * CGFloat(hourCount)
+            let minute = totalMinutesPerDay * (point.y - contentRect.minY) / contentRect.height
             let minuteOffset = offsetPerMin * Double(minute)
-            return dayOffset + offsetPerHour * Double(firstHour) + minuteOffset
+            return dayOffset + (offsetPerHour * Double(firstHour)) + minuteOffset
         }
         return SCKRelativeTimeLocationInvalid
+    }
+
+
+    open func relativeScreenHeight(forAbsoluteNumberMinutes absoluteMin: Double) -> CGFloat? {
+        let canvas = contentRect
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        if (dayTotalMinutes <= 0.0) { return nil }
+        let m: Double = (absoluteMin / dayTotalMinutes)
+        let relScreenHeight: Double = m
+        let absoluteScreenHeight: CGFloat = canvas.height * CGFloat(relScreenHeight)
+//        let absoluteOffset: CGFloat = canvas.minY + absoluteScreenHeight
+        return absoluteScreenHeight
+    }
+
+
+
+
+//    open func relativeScreenHeight(for offset: SCKRelativeTimeLength) -> CGFloat {
+//        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+//        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+//        return (offsetPerMin * offset)
+//    }
+
+
+    override open func relativeTimeLength(for height: CGFloat) -> SCKRelativeTimeLength {
+        let canvas = contentRect
+        if (canvas.height < height) { return SCKRelativeTimeLengthInvalid }
+        // percentHeight: maps on to a scale of 0.0 - 1.0 for the day
+        let percentHeight: Double = Double(height) / Double(canvas.height)
+        // Now just convert from day relative to duration relative
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        let dayTotalSeconds: Double = (dayTotalMinutes * 60.0)
+        if (dayTotalSeconds <= 0.0) { return SCKRelativeTimeLengthInvalid }
+
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay = 1.0 / Double(dayCount)
+        let dateIntervalTotalSeconds = dateInterval.duration
+        let result: SCKRelativeTimeLength = (percentHeight * (dayTotalSeconds / dateIntervalTotalSeconds))
+        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+        return result
     }
 
     /// Returns the Y-axis position in the view's coordinate system that represents a particular hour and

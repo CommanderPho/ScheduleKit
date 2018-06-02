@@ -24,15 +24,17 @@
  *  THE SOFTWARE.
  */
 
+import Foundation
+import AppKit
 import Cocoa
 
-private final class SCKTextFieldCell: NSTextFieldCell {
+open class SCKTextFieldCell: NSTextFieldCell {
 
     /// A flag property to track whether the text field is selected or being
     /// edited.
-    private var editingOrSelected = false
+    public var editingOrSelected = false
 
-    fileprivate override func drawingRect(forBounds rect: NSRect) -> NSRect {
+    open override func drawingRect(forBounds rect: NSRect) -> NSRect {
         var rect = super.drawingRect(forBounds: rect)
         if !editingOrSelected {
             let size = cellSize(forBounds: rect)
@@ -45,31 +47,28 @@ private final class SCKTextFieldCell: NSTextFieldCell {
         return rect
     }
 
-    override func select(withFrame rect: NSRect, in controlView: NSView,
-                         editor textObj: NSText, delegate: Any?,
-                         start selStart: Int, length selLength: Int) {
+    override open func select(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, start selStart: Int, length selLength: Int) {
         let newRect = drawingRect(forBounds: rect)
         editingOrSelected = true
-        super.select(withFrame: newRect, in: controlView, editor: textObj,
-                     delegate: delegate, start: selStart, length: selLength)
+        super.select(withFrame: newRect, in: controlView, editor: textObj, delegate: delegate, start: selStart, length: selLength)
         editingOrSelected = false
     }
 
-    override func edit(withFrame rect: NSRect, in controlView: NSView,
-                       editor textObj: NSText, delegate: Any?, event: NSEvent?) {
+    override open func edit(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, event: NSEvent?) {
         let newRect = drawingRect(forBounds: rect)
         editingOrSelected = true
-        super.edit(withFrame: newRect, in: controlView, editor: textObj,
-                   delegate: delegate, event: event)
+        super.edit(withFrame: newRect, in: controlView, editor: textObj, delegate: delegate, event: event)
         editingOrSelected = false
     }
+
+
 }
 
 /// This class provides a custom NSTextField whose cell renders its string value
 /// vertically centered when the actual text is not selected and/or being edited.
-internal final class SCKTextField: NSTextField {
+open class SCKTextField: NSTextField {
 
-    override class var cellClass: AnyClass? {
+    override open class var cellClass: AnyClass? {
         get {
             return SCKTextFieldCell.self
         }
@@ -78,22 +77,64 @@ internal final class SCKTextField: NSTextField {
         }
     }
 
-    override init(frame frameRect: NSRect) {
+
+    override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setUpDefaultProperties()
     }
 
-    required init?(coder: NSCoder) {
+    required public init?(coder: NSCoder) {
         super.init(coder: coder)
         setUpDefaultProperties()
     }
 
-    /// Sets up the text field default properties.
-    private func setUpDefaultProperties() {
-        drawsBackground = false
-        isEditable = false
-        isBezeled = false
-        alignment = .center
-        font = .systemFont(ofSize: 12.0)
+    open override func contentCompressionResistancePriority(for orientation: NSLayoutConstraint.Orientation) -> NSLayoutConstraint.Priority {
+        switch orientation {
+        case .horizontal:
+            return NSLayoutConstraint.Priority(rawValue: 249.0)
+        default:
+            return NSLayoutConstraint.Priority(rawValue: 249.0)
+        }
     }
+
+
+    public var isDebugMode: Bool = false {
+        didSet {
+            self.backgroundColor = NSColor.orange.withAlphaComponent(0.5)
+            self.setUpDefaultProperties()
+            self.setNeedsDisplay()
+        }
+    }
+
+    open override func layoutSubtreeIfNeeded() {
+        self.preferredMaxLayoutWidth = self.frame.size.width
+        super.layoutSubtreeIfNeeded()
+    }
+    /// Sets up the text field default properties.
+    open func setUpDefaultProperties() {
+        self.drawsBackground = self.isDebugMode
+        self.isEditable = false
+        self.isBezeled = false
+        self.alignment = .center
+        self.font = .systemFont(ofSize: 12.0)
+        self.setupCell()
+        self.usesSingleLineMode = false
+        self.lineBreakMode = .byWordWrapping
+        self.allowsDefaultTighteningForTruncation = true
+        self.maximumNumberOfLines = 2
+//        self.preferredMaxLayoutWidth = self.bounds.width
+    }
+
+
+    open func setupCell() {
+        guard let validCell = self.cell else { fatalError() }
+        guard let customValidCell = validCell as? SCKTextFieldCell else { fatalError() }
+        customValidCell.usesSingleLineMode = false
+        customValidCell.wraps = true
+        customValidCell.lineBreakMode = .byWordWrapping
+        customValidCell.truncatesLastVisibleLine = false
+    }
+
+
+}
 }

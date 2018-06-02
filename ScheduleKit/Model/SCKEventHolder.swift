@@ -33,7 +33,7 @@ open class SCKEventHolder: NSObject {
 
     // For any event of duration less than the set minimum, it will draw as if it were the minimum duration instead.
     // This prevents not being able to read the text or see the event view because the duration is too small.
-    open var minimumEventDisplayDuration: Int { return 30 }
+    open var minimumEventDisplayDuration: Int { return 45 }
 
     /// Initializes a new instance representing a given event object associated
     /// with a concrete `SCKEventView`, managed by the same controller. Returns

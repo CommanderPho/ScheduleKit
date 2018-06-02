@@ -144,9 +144,7 @@ import Cocoa
     /// - Returns: The calculated date or `nil` if `relativeTimeLocation` is not
     ///            a value compressed between 0.0 and 1.0.
     public final func calculateDate(for relativeTimeLocation: SCKRelativeTimeLocation) -> Date? {
-        guard relativeTimeLocation >= 0.0 && relativeTimeLocation <= 1.0 else {
-            return nil
-        }
+        guard relativeTimeLocation >= 0.0 && relativeTimeLocation <= 1.0 else { return nil; }
         let start = dateInterval.start.timeIntervalSinceReferenceDate
         let length = dateInterval.duration * relativeTimeLocation
         var numberOfSeconds = Int(trunc(start + length))
@@ -165,25 +163,12 @@ import Cocoa
     ///            `SCKRelativeTimeLocationInvalid` if `date` is not contained in
     ///            that interval.
     public final func calculateRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
-        guard dateInterval.contains(date) else {
-            return SCKRelativeTimeLocationInvalid
-        }
+        guard dateInterval.contains(date) else { return SCKRelativeTimeLocationInvalid; }
         let dateRef = date.timeIntervalSinceReferenceDate
         let startDateRef = dateInterval.start.timeIntervalSinceReferenceDate
         return (dateRef - startDateRef) / dateInterval.duration
     }
 
-//    public final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
-//        let size = self.contentRect.size
-//        let totalHight: CGFloat = size.height
-//        if (totalHight <= 0.0) {
-//            return SCKRelativeTimeLengthInvalid
-//        }
-//        else {
-//            let percentHeight = height / totalHight
-//            return SCKRelativeTimeLength(percentHeight)
-//        }
-//    }
 
     /// Calculates the relative time location in the view's date interval for a
     /// given point in the view's coordinate system. The default implementation
@@ -197,6 +182,31 @@ import Cocoa
     public func relativeTimeLocation(for point: CGPoint) -> SCKRelativeTimeLocation {
         return SCKRelativeTimeLocationInvalid
     }
+
+    /// Calculates the relative time length in the view's date interval for a
+    /// given height in the view's coordinate system. The default implementation
+    /// returns `SCKRelativeTimeLengthInvalid`. Subclasses must override this
+    /// method in order to be able to transform screen heights into date lengths.
+    ///
+    /// - Parameter height: The height for which to perform the calculation.
+    /// - Returns: A value between 0.0 and 1.0 representing the relative time
+    ///            length for the given point, or `SCKRelativeTimeLengthInvalid`
+    ///            in case `height` falls out of the view's content rect.
+    public func relativeTimeLength(for height: CGFloat) -> SCKRelativeTimeLength {
+        return SCKRelativeTimeLengthInvalid
+    }
+
+    //    public final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
+    //        let size = self.contentRect.size
+    //        let totalHight: CGFloat = size.height
+    //        if (totalHight <= 0.0) {
+    //            return SCKRelativeTimeLengthInvalid
+    //        }
+    //        else {
+    //            let percentHeight = height / totalHight
+    //            return SCKRelativeTimeLength(percentHeight)
+    //        }
+    //    }
 
 
 
