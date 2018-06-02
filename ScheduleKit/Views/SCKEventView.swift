@@ -90,6 +90,9 @@ import Cocoa
 
     public var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
         didSet {
+            if (self.timeSubindicatorConfig?.color == nil) {
+                self.timeSubindicatorConfig?.color = self.overlayColor
+            }
             self.needsDisplay = true
         }
     }
@@ -166,6 +169,7 @@ import Cocoa
 
     public func updateOverlayColor() {
         self.innerLabel.textColor = self.labelTextColor
+        self.timeSubindicatorConfig?.color = self.labelTextColor
         self.innerLabel.setNeedsDisplay()
     }
 

@@ -172,11 +172,10 @@ open class SCKEventHolder: NSObject {
                 else {
 //                    self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(thickness: 1.0, color: NSColor.red, height: 1.0, eventViewRelativeOffset: 0.0)
                     self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(eventViewRelativeOffset: 0.0)
-
                 }
 
                 self.timeSubindicatorConfig!.thickness = 5.0
-                self.timeSubindicatorConfig!.color = NSColor.white
+                self.timeSubindicatorConfig!.color = nil
                 needsApplyTimeSubindicator = true
 
 
