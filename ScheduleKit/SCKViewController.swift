@@ -26,15 +26,7 @@
 
 import AppKit
 
-/// The date interval mode for a SCKViewController.
-@objc public enum SCKViewControllerMode: Int {
-    /// The controller works with a single day date interval.
-    case day
-    /// The controller works with a week date interval.
-    case week
-    /// The controller works with a month date interval.
-    case month
-}
+
 
 /// A NSViewController subclass that sets up a schedule view embedded in a scroll
 /// view and displays a set of events within a day or a week time interval. The
@@ -71,6 +63,7 @@ import AppKit
         didSet { // If value changed and a view was already installed, replace it.
             if mode != oldValue && isViewLoaded {
                 setUpScheduleView()
+                self.scheduleView.dateInterval = mode.defaultInterval
             }
         }
     }
@@ -119,6 +112,22 @@ import AppKit
             sView.trailingAnchor.constraint(equalTo: p.trailingAnchor),
             sView.topAnchor.constraint(equalTo: p.topAnchor)
         ])
+    }
+
+
+    @objc open func resetScheduleView() {
+        if self.isViewLoaded {
+            self.setUpScheduleView()
+        }
+    }
+
+    @objc open func rebuildAllEvents() {
+        self._invalidateLastFetch = true
+    }
+
+
+    func setupDefaultAppropriateDateInterval(forMode: SCKViewControllerMode) {
+
     }
 
     // MARK: - View lifecycle
@@ -261,7 +270,7 @@ import AppKit
     /// A reference to the events loaded in the last fetch that is compared to the newly loaded ones to determine
     /// if both sets are equal and thus, the event processing is innecessary.
     private var _lastFetch: NSPointerArray = NSPointerArray.weakObjects()
-
+    var _invalidateLastFetch: Bool = false
     /// The common pathway for parsing both syncrhonously and asynchronously
     /// loaded events. This method performs a series of operations:
     ///
@@ -272,11 +281,19 @@ import AppKit
     /// - Parameter events: The events to be parsed.
     private func parseEvents(_ events: [SCKEvent]) {
         let eventSet = NSSet(array: events)
-        guard eventSet != NSSet(array: _lastFetch.allObjects) else {
-            print("Fetched events are the same as in last fetch. Will just re-layout them.")
-            scheduleView.invalidateLayoutForAllEventViews(animated: false)
-            return
+        let fetchedEventsChanged: Bool = (eventSet != NSSet(array: _lastFetch.allObjects))
+
+        if (!self._invalidateLastFetch) {
+            guard fetchedEventsChanged else {
+                print("Fetched events are the same as in last fetch. Will just re-layout them.")
+                scheduleView.invalidateLayoutForAllEventViews(animated: false)
+                return
+            }
         }
+        else {
+            print("Rebuilding last fetch because self._invalidateLastFetch is true!")
+        }
+
         // Update last fetch
         _lastFetch = NSPointerArray.weakObjects()
         for e in events {
@@ -319,7 +336,6 @@ import AppKit
             else {
                 eventView = SCKEventView(frame: .zero)
             }
-
             scheduleView.addSubview(eventView)
             scheduleView.addEventView(eventView)
             if let holder = SCKEventHolder(event: e, view: eventView, controller: self) {
@@ -332,6 +348,9 @@ import AppKit
 
         // Invalidate the view's layout.
         scheduleView.invalidateLayoutForAllEventViews(animated: false)
+        if (self._invalidateLastFetch) {
+            self._invalidateLastFetch = false
+        }
     }
 
     // MARK: - Conflict handling

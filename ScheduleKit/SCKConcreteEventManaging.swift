@@ -123,6 +123,18 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///            `nil` if you don't want to display a menu for this particular
     ///            event.
     func scheduleController(_ controller: SCKViewController, menuForConcreteEvent event: EventType) -> NSMenu?
+
+    /// Implement this method to conditionally provide a customized view for
+    /// one or more events in a schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing a right clicked event.
+    ///   - event: The event to be displayed in the returned view
+    /// - Returns: An SCKEventView subclassed object to will be displayed as the event view or
+    ///            `nil` if you want to use the default view for this particular
+    ///            event.
+    func scheduleController(_ controller: SCKViewController, viewForConcreteEvent event: EventType) -> SCKEventView?
+
 }
 
 // MARK: - SCKConcreteEventManaging <-> SCKEventManaging translation
@@ -183,7 +195,13 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
     public func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu? {
         return scheduleController(controller, menuForConcreteEvent: casted(event))
     }
+
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView? { return scheduleController(controller, viewForConcreteEvent: casted(event)); }
 }
+
+
+
+
 
 public extension SCKConcreteEventManaging where EventType: SCKEvent {
 
@@ -237,4 +255,7 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
                                    menuForConcreteEvent event: EventType) -> NSMenu? {
         return nil
     }
+
+
+    public func scheduleController(_ controller: SCKViewController, viewForConcreteEvent event: EventType) -> SCKEventView? { return nil }
 }

@@ -112,6 +112,7 @@ open class SCKGridView: SCKView {
     private func updateHourParameters() {
         firstHour = dayStartPoint.hour
         hourCount = dayEndPoint.hour - dayStartPoint.hour
+        //TODO: Doesn't this contentRect.height need to be reduced by the margin sizes? Is this responsible for the layout bug?
         let minHourHeight = contentRect.height / CGFloat(hourCount)
         if hourHeight < minHourHeight {
             hourHeight = minHourHeight

@@ -8,7 +8,10 @@
 
 import Cocoa
 
+// This class is responsible for the configuration of the solid line drawn on event views (SCKEventView) to indicate the precise time.
+/*
 
+*/
 public struct SCKEventTimeSubindicatorConfig {
     var thickness: CGFloat = 2.0
 
