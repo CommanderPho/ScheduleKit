@@ -510,7 +510,7 @@ open class SCKGridView: SCKView {
 
     override open func invalidateLayout(for eventView: SCKEventView) {
         // Overriden to manage event conflicts. No need to call super in this case.
-        let conflicts = controller.resolvedConflicts(for: eventView.eventHolder)
+        let conflicts: [SCKEventHolder] = controller.resolvedConflicts(for: eventView.eventHolder)
         if !conflicts.isEmpty {
             eventView.eventHolder.conflictCount = conflicts.count
         } else {
