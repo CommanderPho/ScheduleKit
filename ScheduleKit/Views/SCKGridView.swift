@@ -837,6 +837,7 @@ open class SCKGridView: SCKView {
         NSBezierPath(ovalIn: CGRect(x: canvas.minX-2.0, y: yOrigin-2.0, width: 4.0, height: 4.0)).fill()
     }
 
+
     open func drawDraggingGuidesIfNeeded() {
         guard let dV = eventViewBeingDragged else {return}
         (dV.backgroundColor ?? NSColor.darkGray).setFill()
