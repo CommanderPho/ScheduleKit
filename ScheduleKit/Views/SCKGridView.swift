@@ -582,18 +582,26 @@ open class SCKGridView: SCKView {
         let canvas = contentRect
         guard dayCount > 0 else { return } // View is not ready
 
-        // Layout day labels
-
         let marginLeft = self.Constants.paddingLeft
         let dayLabelsRect = self.dayLabelsRect!
         let dayWidth = self.dayWidth!
-//        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
-//        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
+
+        // Layout day labels
+
         self.dayColumnRectangles.removeAll(keepingCapacity: true)
 
         for day in 0..<dayCount {
             let minX = marginLeft + (CGFloat(day) * dayWidth);
             let midY = Constants.DayAreaHeight/2.0
+            // Add the day label rect
+            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
+
+            // Set up the day/month labels if enabled, otherwise just continue to the next day
+            if let validLabelDelegate = self.labelManagingDelegate {
+                if (validLabelDelegate.shouldDisableDayHeaderLabels) {
+                    continue; // continue without messing around with the day or month labels (as they don't exist)
+                }
+            }
             let dLabel = dayLabels[day]
             let o = CGPoint(x: minX + dayWidth/2.0 - dLabel.frame.width/2.0, y: midY - dLabel.frame.height/2.0)
             var r = CGRect(origin: o, size: dLabel.frame.size)
@@ -604,7 +612,6 @@ open class SCKGridView: SCKView {
                 mLabel.frame = CGRect(origin: mOrigin, size: mLabel.frame.size)
             }
             dLabel.frame = r
-            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
         }
 
         // Layout hour labels
