@@ -9,20 +9,33 @@
 import Foundation
 import Cocoa
 
+// MARK: -
+// MARK: - protocol SCKLabelManaging
+// Description: Delegate for configuring displayed left sidebar time labels and header date labels
 
+/* //// Responsibilities:
+ - Format and configure labels that are added and removed programmatically by SCK
+*/
+/* //// Known Uses:
+ - SCKGridView, SCKView
+*/
 public protocol SCKLabelManaging: class {
     var dayLabelsDateFormatter: DateFormatter {get}
     var monthLabelsDateFormatter: DateFormatter {get}
-
 
     func getLabel(forLabelType type: LabelType) -> NSTextField
     func getLabelColor(forLabelType type: LabelType) -> NSColor
 
     func label(_ text: String, size: CGFloat, color: NSColor) -> NSTextField
-    
+
+    // If true, disables the programmatic generation of day header labels so a custom layout can be performed.
+    var shouldDisableDayHeaderLabels: Bool {get}
+
 }
 
 public extension SCKLabelManaging {
+
+    var shouldDisableDayHeaderLabels: Bool { return false }
 
     var dayLabelsDateFormatter: DateFormatter {
         let f = DateFormatter();

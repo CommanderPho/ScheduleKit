@@ -150,6 +150,7 @@ open class SCKGridView: SCKView {
         label.stringValue = text
         label.font = .systemFont(ofSize: size)
         label.textColor = color
+        label.setAccessibilityIdentifier("SCKDayOrHourLabel")
         label.sizeToFit() // Needed
         return label
     }
@@ -181,10 +182,19 @@ open class SCKGridView: SCKView {
         }
         self.dayLabels.removeAll(keepingCapacity: true)
         self.monthLabels.removeAll(keepingCapacity: true)
-        if (shouldConfigure) {
-            self.configureDayLabels()
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let finalShouldConfigure: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            finalShouldConfigure = (shouldConfigure && (!validLabelDelegate.shouldDisableDayHeaderLabels))
+        }
+        else {
+            finalShouldConfigure = shouldConfigure
         }
 
+        if (finalShouldConfigure) {
+            self.configureDayLabels()
+        }
     }
 
     func resetLabels(andConfigure shouldConfigure: Bool) {
@@ -241,6 +251,23 @@ open class SCKGridView: SCKView {
     /// interval. Eventually marks the view as needing layout. This method is 
     /// called whenever the day interval property changes.
     private func configureDayLabels() {
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let labelsAreEnabled: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            labelsAreEnabled = (!validLabelDelegate.shouldDisableDayHeaderLabels)
+        }
+        else {
+            labelsAreEnabled = true
+        }
+
+        // If labels are not enabled, we reset them (removing them from the views and deallocating them) without configuring them (as not to recreate them)
+        if (!labelsAreEnabled) {
+            self.resetDayLabels(andConfigure: false)
+            needsLayout = true
+            return
+        }
+
         // 1. Generate missing labels
         for day in 0..<dayCount {
             if dayLabels.count > day { // Skip already created labels
@@ -270,8 +297,8 @@ open class SCKGridView: SCKView {
                 monthLabels[day].removeFromSuperview()
             } else if day < dayCount {
                 if dayLabel.superview == nil {
-                    dayLabelingView.addSubview(dayLabel)
-                    dayLabelingView.addSubview(monthLabels[day])
+                    self.dayLabelingView.addSubview(dayLabel)
+                    self.dayLabelingView.addSubview(monthLabels[day])
                 }
                 let date = sharedCalendar.date(byAdding: .day, value: day, to: dateInterval.start)!
                 let text: String
