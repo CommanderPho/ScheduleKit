@@ -25,7 +25,12 @@ import Cocoa
     /// events.
     func decreaseMonthOffset(_ sender: Any) {
         let c = sharedCalendar
-        dateInterval = c.dateInterval(dateInterval, offsetBy: -1, .month)
+        let oldDateInterval = dateInterval
+        guard let prevMonthDate: Date = c.date(byAdding: .month, value: -1, to: oldDateInterval.start) else {
+            fatalError()
+        }
+        let updatedMonthDateInterval = SCKMonthView.getMonth(includingDate: prevMonthDate)
+        dateInterval = updatedMonthDateInterval
         controller.internalReloadData()
     }
 
@@ -33,19 +38,28 @@ import Cocoa
     /// events.
     func increaseMonthOffset(_ sender: Any) {
         let c = sharedCalendar
-        dateInterval = c.dateInterval(dateInterval, offsetBy: 1, .month)
+        let oldDateInterval = dateInterval
+        guard let nextMonthDate: Date = c.date(byAdding: .month, value: 1, to: oldDateInterval.start) else {
+            fatalError()
+        }
+        let updatedMonthDateInterval = SCKMonthView.getMonth(includingDate: nextMonthDate)
+        dateInterval = updatedMonthDateInterval
         controller.internalReloadData()
     }
 
     /// Displays the default date interval (this month) and asks the controller to
     /// reload matching events.
     func resetMonthOffset(_ sender: Any) {
-        let units: Set<Calendar.Component> = [.month, .year]
-        let monthComponents = sharedCalendar.dateComponents(units, from: Date())
-        guard let start = sharedCalendar.date(from: monthComponents) else {
-            fatalError("Could not calculate the start date for current month.")
-        }
-        dateInterval = DateInterval(start: start, duration: dateInterval.duration)
+        let updatedMonthDateInterval = SCKMonthView.getMonth(includingDate: Date())
+        dateInterval = updatedMonthDateInterval
         controller.internalReloadData()
+    }
+
+    static func getMonth(includingDate date: Date) -> DateInterval {
+        var firstDayOfMonth = Date()
+        var timeIntervalForMonth = TimeInterval()
+        _ = Calendar.current.dateInterval(of: .month, start: &firstDayOfMonth, interval: &timeIntervalForMonth, for: date)
+        var lastDayOfMonth: Date = firstDayOfMonth.addingTimeInterval(timeIntervalForMonth - 1)
+        return DateInterval(start: firstDayOfMonth, duration: timeIntervalForMonth)
     }
 }

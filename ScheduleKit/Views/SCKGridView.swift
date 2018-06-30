@@ -90,7 +90,7 @@ open class SCKGridView: SCKView {
         didSet { // Set up day count and day labels
             let sD = dateInterval.start
             let eD = dateInterval.end.addingTimeInterval(1)
-            dayCount = sharedCalendar.dateComponents([.day], from: sD, to: eD).day!
+            self.dayCount = sharedCalendar.dateComponents([.day], from: sD, to: eD).day!
             configureDayLabels()
             _ = self.minuteTimer
         }
