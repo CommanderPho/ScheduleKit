@@ -441,13 +441,21 @@
 			isa = PBXGroup;
 			children = (
 				D787768020B8632C0027894A /* SCKViewDelegates */,
-				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
+				D7DFD9B720F17BB400E36025 /* Event Managing */,
 				D7911583209710E70026DD1F /* SCKLayoutManaging.swift */,
 				D791157E2096EE5C0026DD1F /* SCKColorManaging.swift */,
-				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
 				D79115802096FB2A0026DD1F /* SCKLabelManaging.swift */,
 			);
 			name = Protocols;
+			sourceTree = "<group>";
+		};
+		D7DFD9B720F17BB400E36025 /* Event Managing */ = {
+			isa = PBXGroup;
+			children = (
+				996020CA1DF7075400BDD901 /* SCKConcreteEventManaging.swift */,
+				9982601E1DDB3DAD00C46586 /* SCKEventManaging.swift */,
+			);
+			name = "Event Managing";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

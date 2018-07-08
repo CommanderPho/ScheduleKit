@@ -63,6 +63,7 @@ open class SCKEventHolder: NSObject {
         }
 
         let obj = representedObject as AnyObject & SCKEvent
+        // Add represented Event value observers
         addDurationObserver(on: obj)
         addScheduledDateObserver(on: obj)
         addTitleObserver(on: obj)

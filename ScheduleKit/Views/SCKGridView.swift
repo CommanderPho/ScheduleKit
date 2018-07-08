@@ -536,7 +536,8 @@ open class SCKGridView: SCKView {
     }
 
     override open func invalidateLayout(for eventView: SCKEventView) {
-        // Overriden to manage event conflicts. No need to call super in this case.
+        // Overriden to manage event conflicts. No need to call super in this case because it does nothing.
+        // Gets the conflicts (overlapping events) for this specific eventView
         let conflicts: [SCKEventHolder] = controller.resolvedConflicts(for: eventView.eventHolder)
         if !conflicts.isEmpty {
             eventView.eventHolder.conflictCount = conflicts.count
@@ -577,17 +578,33 @@ open class SCKGridView: SCKView {
         return dayWidth
     }
 
+
+    //MARK: -
+    //MARK: - layout()
     open override func layout() {
         super.layout();
-        let canvas = contentRect
+        let canvas: CGRect = contentRect
         guard dayCount > 0 else { return } // View is not ready
 
-        let marginLeft = self.Constants.paddingLeft
-        let dayLabelsRect = self.dayLabelsRect!
-        let dayWidth = self.dayWidth!
+        let marginLeft: CGFloat = self.Constants.paddingLeft
+        let dayLabelsRect: CGRect = self.dayLabelsRect!
+        let dayWidth: CGFloat = self.dayWidth!
 
         // Layout day labels
+        self.layoutDayLabels(canvas: canvas, marginLeft: marginLeft, dayWidth: dayWidth)
 
+        // Layout hour labels
+        self.layoutHourLabels(canvas: canvas, marginLeft: marginLeft)
+
+        // Layout events
+        let offsetPerDay: Double = 1.0/Double(self.dayCount)
+        self.layoutEvents(canvas: canvas, dayWidth: dayWidth, offsetPerDay: offsetPerDay)
+    }
+
+    //MARK: -
+    //MARK: - layoutDayLabels(...)
+    // called only by layout()
+    open func layoutDayLabels(canvas: CGRect, marginLeft: CGFloat, dayWidth: CGFloat) {
         self.dayColumnRectangles.removeAll(keepingCapacity: true)
 
         for day in 0..<dayCount {
@@ -613,9 +630,13 @@ open class SCKGridView: SCKView {
             }
             dLabel.frame = r
         }
+    }
 
-        // Layout hour labels
-        for (i, label) in hourLabels {
+    //MARK: -
+    //MARK: - layoutHourLabels(...)
+    // called only by layout()
+    open func layoutHourLabels(canvas: CGRect, marginLeft: CGFloat) {
+        for (i, label) in self.hourLabels {
             let size = label.frame.size
             switch i {
             case 0..<24: // Hour label
@@ -628,10 +649,12 @@ open class SCKGridView: SCKView {
                 label.frame = CGRect(origin: o, size: size)
             }
         }
+    }
 
-        //MARK: -
-        //MARK: - Layout events
-        let offsetPerDay = 1.0/Double(dayCount)
+    //MARK: -
+    //MARK: - layoutEvents(...)
+    // called only by layout()
+    open func layoutEvents(canvas: CGRect, dayWidth: CGFloat, offsetPerDay: Double) {
         for eventView in subviews.compactMap({ $0 as? SCKEventView }) where eventView.eventHolder.isReady {
             let holder = eventView.eventHolder!
             let day = Int(trunc(holder.relativeStart/offsetPerDay))
@@ -647,6 +670,13 @@ open class SCKGridView: SCKView {
             eventView.frame |= newFrame
         }
     }
+
+
+
+
+
+
+
 
     open override func resize(withOldSuperviewSize oldSize: NSSize) {
         super.resize(withOldSuperviewSize: oldSize) // Triggers layout. Try to acommodate hour height.

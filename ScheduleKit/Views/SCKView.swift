@@ -303,16 +303,16 @@ import Cocoa
         if let draggedView = eventViewBeingDragged, let idx = holdersToFreeze.index(of: draggedView.eventHolder) {
             holdersToFreeze.remove(at: idx)
         }
-
+        // Freeze the event holders in preparation for invalidation
         holdersToFreeze.forEach { $0.freeze() }
 
-        // 3. Perform invalidation
+        // 3. Perform invalidation by calling self.invalidateLayout(for: each individual event view).
         eventViews.forEach { invalidateLayout(for: $0) }
 
-        // 4. Unfreeze event holders
+        // 4. Unfreeze event holders once layout is invalidated
         holdersToFreeze.forEach { $0.unfreeze() }
 
-        // 5. Mark as needing layout
+        // 5. Mark self as needing layout
         needsLayout = true
 
         // 6. Animate if requested
