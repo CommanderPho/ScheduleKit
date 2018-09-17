@@ -96,6 +96,24 @@ public protocol SCKEventManaging: class {
     ///   - event: The double clicked event.
     func scheduleController(_ controller: SCKViewController, didDoubleClickEvent event: SCKEvent)
 
+    /// Implement this method to be notified when an event is hovered with the mouse in a
+    /// schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing the event.
+    ///   - event: The mouse entered event.
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent)
+
+    /// Implement this method to be notified when an event is no longer hovered by the mouse in a
+    /// schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing the event.
+    ///   - event: The mouse exit event.
+    func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent)
+
+
+
     // MARK: Event changing
 
     /// Implement this method to conditionally allow or deny a user-initiated
@@ -108,9 +126,7 @@ public protocol SCKEventManaging: class {
     ///   - oldValue: The current event's duration in minutes.
     ///   - newValue: The proposed event's duration in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDurationOfEvent event: SCKEvent,
-                            from oldValue: Int, to newValue: Int) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDurationOfEvent event: SCKEvent, from oldValue: Int, to newValue: Int) -> Bool
 
     /// Implement this method to conditionally allow or deny a user-initiated
     /// date change in one of the events managed by a SCKViewController. If
@@ -122,9 +138,7 @@ public protocol SCKEventManaging: class {
     ///   - oldValue: The current event's scheduled date in minutes.
     ///   - newValue: The proposed event's schaduled date in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfEvent event: SCKEvent,
-                            from oldValue: Date, to newValue: Date) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfEvent event: SCKEvent, from oldValue: Date, to newValue: Date) -> Bool
 
     // MARK: Contextual menu
 
@@ -139,6 +153,20 @@ public protocol SCKEventManaging: class {
     ///            event.
     func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu?
 
+
+    /// Implement this method to conditionally provide a customized view for
+    /// one or more events in a schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing a right clicked event.
+    ///   - event: The right clicked event.
+    /// - Returns: An SCKEventView subclassed object to will be displayed as the event view or
+    ///            `nil` if you want to use the default view for this particular
+    ///            event.
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView?
+
+    //@objc (viewForEventKind:inScheduleView:)
+    //optional func view(for eventKindValue: Int, in scheduleView: SCKView) -> SCKEventView
 }
 
 public extension SCKEventManaging {
@@ -157,20 +185,26 @@ public extension SCKEventManaging {
 
     func scheduleController(_ controller: SCKViewController, didDoubleClickEvent event: SCKEvent) {}
 
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent) {}
+
+    func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent) {}
+
+    
     func scheduleController(_ controller: SCKViewController,
                             shouldChangeDurationOfEvent event: SCKEvent,
                             from oldValue: Int, to newValue: Int) -> Bool {
         return true
     }
 
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfEvent event: SCKEvent,
-                            from oldValue: Date, to newValue: Date) -> Bool {
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfEvent event: SCKEvent, from oldValue: Date, to newValue: Date) -> Bool {
         return true
     }
 
-    func scheduleController(_ controller: SCKViewController,
-                            menuForEvent event: SCKEvent) -> NSMenu? {
+    func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu? {
         return nil
     }
+
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView? { return nil }
+
+
 }

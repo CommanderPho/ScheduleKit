@@ -29,7 +29,11 @@ import Cocoa
 /// Instances of this class work in conjunction with an `SCKEventView` and 
 /// represent an object conforming to the `SCKEvent` protocol. These objects are
 /// automatically created by the `SCKViewController` reloadData methods.
-internal final class SCKEventHolder: NSObject {
+open class SCKEventHolder: NSObject {
+
+    // For any event of duration less than the set minimum, it will draw as if it were the minimum duration instead.
+    // This prevents not being able to read the text or see the event view because the duration is too small.
+    open var minimumEventDisplayDuration: Int { return 45 }
 
     /// Initializes a new instance representing a given event object associated
     /// with a concrete `SCKEventView`, managed by the same controller. Returns
@@ -41,7 +45,7 @@ internal final class SCKEventHolder: NSObject {
     ///           view hierarchy at this point.
     ///   - controller: The `SCKViewController` instance managing this holder.
     ///
-    init?(event: SCKEvent, view: SCKEventView, controller: SCKViewController) {
+    public init?(event: SCKEvent, view: SCKEventView, controller: SCKViewController) {
         representedObject = event
         cachedDuration = event.duration
         cachedScheduledDate = event.scheduledDate
@@ -59,22 +63,27 @@ internal final class SCKEventHolder: NSObject {
         }
 
         let obj = representedObject as AnyObject & SCKEvent
+        // Add represented Event value observers
         addDurationObserver(on: obj)
         addScheduledDateObserver(on: obj)
         addTitleObserver(on: obj)
         addUserEventColorObserver(on: obj)
+        addUserReducedEmphasisEventColorObserver(on: obj)
+        addUserEventOverlayColorObserver(on: obj)
+        addUserReducedEmphasisEventOverlayColorObserver(on: obj)
     }
 
     // MARK: - Object state
 
     /// The event object backed by this event holder. Cannot be changed.
-    let representedObject: SCKEvent
+    open let representedObject: SCKEvent
 
     /// A reference to the `SCKEventView` associated with this event holder.
-    private(set) weak var eventView: SCKEventView?
+//    internal(set) weak var eventView: SCKEventView?
+    open weak var eventView: SCKEventView?
 
     /// A convenience reference to the controller that created this holder.
-    private weak var controller: SCKViewController?
+    open weak var controller: SCKViewController?
 
     // MARK: Cached properties
 
@@ -84,38 +93,40 @@ internal final class SCKEventHolder: NSObject {
 
     /// A local copy of the represented object's duration. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedDuration: Int
+    open var cachedDuration: Int
 
     /// A local copy of the represented object's date. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedScheduledDate: Date
+    open var cachedScheduledDate: Date
 
     /// A local copy of the represented object's title. It is automatically
     /// uppdated when observed changes from the represented object are processed.
-    internal var cachedTitle: String
+    open var cachedTitle: String
 
     /// A local copy of the represented object's user. It is automatically
     /// uppdated when observed changes from the represented object are processed.
     /// - Note: We observe the user instead of her color directly to make sure
     ///         the user changes trigger a notification.
-    internal weak var cachedUser: SCKUser?
+    open weak var cachedUser: SCKUser?
 
     // MARK: Relative properties
 
     /// The relative start time of the event in the `scheduleView` date bounds.
-    internal var relativeStart = SCKRelativeTimeLocationInvalid
+    open var relativeStart = SCKRelativeTimeLocationInvalid
 
     /// The relative end time of the event in the `scheduleView` date bounds.
-    internal var relativeEnd = SCKRelativeTimeLocationInvalid
+    open var relativeEnd = SCKRelativeTimeLocationInvalid
 
     /// The relative duration of the event in the `scheduleView` date bounds.
-    internal var relativeLength = SCKRelativeTimeLengthInvalid
+    open var relativeLength = SCKRelativeTimeLengthInvalid
+
+    open var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil
 
     /// Indicates whether relative values are valid or not, thus if layout is safe.
-    private(set) var isReady: Bool = false
+    internal(set) var isReady: Bool = false
 
     /// Invalidates the holder's cached properties and recalculates them by
-    /// comparin the values from the represented object's `duration` and
+    /// comparing the values from the represented object's `duration` and
     /// `scheduledDate` properties and the schedule view date bounds.
     /// This method might be invoked automatically:
     /// - When the `SCKEventHolder` object is initialized.
@@ -127,9 +138,12 @@ internal final class SCKEventHolder: NSObject {
     /// - Note: This method is not called automatically when the schedule view
     ///         date bounds change, since the respective reloadData method is
     ///         called instead.
-    internal func recalculateRelativeValues() {
+    open func recalculateRelativeValues() {
         // If view is not set, then do nothing.
         guard let rootView = eventView?.scheduleView else { return }
+        let convertedRelativeMinimumHeight: SCKRelativeTimeLength = SCKRelativeTimeLength(self.minimumEventDisplayDuration)
+        var needsApplyTimeSubindicator: Bool = false
+
         // Invalidate state.
         isReady = false
         relativeStart = SCKRelativeTimeLocationInvalid
@@ -138,39 +152,113 @@ internal final class SCKEventHolder: NSObject {
         // Calculate new start
         relativeStart = rootView.calculateRelativeTimeLocation(for: cachedScheduledDate)
         if relativeStart != SCKRelativeTimeLocationInvalid {
+//            let minimumHeight: CGFloat = self.minimumEventHeight
+//            let convertedRelativeMinimumHeight: SCKRelativeTimeLength = rootView.calculateRelativeTimeDuration(for: minimumHeight)
+
             if cachedDuration > 0 {
                 let inSeconds = SCKRelativeTimeLength(cachedDuration * 60)
                 let endDate = cachedScheduledDate.addingTimeInterval(inSeconds)
                 relativeEnd = rootView.calculateRelativeTimeLocation(for: endDate)
-                if relativeEnd == SCKRelativeTimeLocationInvalid {
-                    relativeEnd = 1.0
                 }
-                relativeLength = relativeEnd - relativeStart
-                isReady = true
+            else { // For instantaneous events
+                self.cachedDuration = Int(convertedRelativeMinimumHeight)
+                let inSeconds = SCKRelativeTimeLength(cachedDuration * 60)
+                let endDate = cachedScheduledDate.addingTimeInterval(inSeconds)
+                relativeEnd = rootView.calculateRelativeTimeLocation(for: endDate)
+
+                if let validTimeSubindicator = self.timeSubindicatorConfig {
+                    self.timeSubindicatorConfig!.eventViewRelativeOffset = 0.0
+                    
+                }
+                else {
+//                    self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(thickness: 1.0, color: NSColor.red, height: 1.0, eventViewRelativeOffset: 0.0)
+                    self.timeSubindicatorConfig = SCKEventTimeSubindicatorConfig(eventViewRelativeOffset: 0.0)
+                }
+
+                self.timeSubindicatorConfig!.thickness = 5.0
+                self.timeSubindicatorConfig!.color = nil
+                needsApplyTimeSubindicator = true
+
+
+//                let eventStartOffset: CGFloat = rootView.contentRect.height * CGFloat(relativeStart)
+//                // TODO: make sure it doesn't exceed the rootView's bounds
+//                let proposedRelativeEnd = relativeStart + convertedRelativeMinimumHeight
+//                let proposedEndOffset: CGFloat = eventStartOffset + minimumHeight
+//
+//                if (rootView.contentRect.height >= proposedEndOffset) {
+//                    relativeEnd = SCKRelativeTimeLocation(proposedRelativeEnd)
+//                }
+//                else {
+//                    // Spans out of the displayed day area!
+//                    relativeEnd = SCKRelativeTimeLocationInvalid
+//                }
             }
+
+            if relativeEnd == SCKRelativeTimeLocationInvalid {
+                relativeEnd = 1.0 // Truncate event to the end of the view (note this might violate the minimum size, but we'll ignore that for now.
+            }
+            var proposedRelativeLength = relativeEnd - relativeStart
+//            if (proposedRelativeLength < convertedRelativeMinimumHeight) {
+//                // Must adjust relative end or relative start to match the required relative length
+//                var remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                // Begin by shifting the end down as much as possible.
+//                let availableBelowOffset = 1.0 - relativeEnd
+//                // If there is any space below the current relativeEnd, fill it
+//                if (availableBelowOffset > 0.0) {
+//                    // Move down by the available below offset
+//                    relativeEnd = relativeEnd + remainingLengthToFill
+//                    // Clamp to the maximum (1.0)
+//                    relativeEnd = max(relativeEnd, 1.0)
+//
+//                    //Compute the updated difference
+//                    proposedRelativeLength = relativeEnd - relativeStart
+//                    remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                }
+//
+//                // If that update was still enough try to shift the event's relativeStart up to compensate
+//                if (remainingLengthToFill > 0.0) {
+//                    relativeStart = (relativeStart - remainingLengthToFill)
+//                    relativeStart = min(0.0, relativeStart) // Ensure the adjustment doesn't escape the box
+//                    //Compute the updated difference
+//                    proposedRelativeLength = relativeEnd - relativeStart
+//                    remainingLengthToFill = convertedRelativeMinimumHeight - proposedRelativeLength
+//                }
+//
+//                if (remainingLengthToFill > 0.0) {
+//                    print("Error! The view is too smmall to satisify the minimum EventView height requirements!")
+//                }
+//                // Otherwise it has been resolved to the best of our ability.
+//            }
+
+            relativeLength = proposedRelativeLength
+            if (needsApplyTimeSubindicator) {
+                self.eventView?.timeSubindicatorConfig = self.timeSubindicatorConfig
+                self.eventView?.needsDisplay = true
+            }
+            isReady = true
         }
     }
 
     // MARK: - Conflict tracking
 
     /// The number of events in conflict with this. Includes self, so min is 1.
-    internal var conflictCount: Int = 1
+    open var conflictCount: Int = 1
 
     /// The position of this event among the events in conflict (zero based).
-    internal var conflictIndex: Int = 0
+    open var conflictIndex: Int = 0
 
     /// When observing represented object changes, the events in conflict whith
     /// this one before the actual change takes place.
-    private var previousConflicts: Set<SCKEventHolder> = []
+    open var previousConflicts: Set<SCKEventHolder> = []
 
     // MARK: - Change observing
 
     /// Set to `true` when observed changes observed from `representedObject`
     /// should be ignored (either when the schedule view itself is making the
     /// change or when the represented object is not valid anymore).
-    private var shouldIgnoreChanges: Bool = false
+    open var shouldIgnoreChanges: Bool = false
 
-    private var changeObserations = [NSKeyValueObservation]()
+    open var changeObserations = [NSKeyValueObservation]()
 
     // MARK: - State freezing
 
@@ -194,7 +282,7 @@ internal final class SCKEventHolder: NSObject {
     /// changes observed from the represented object until `unfreeze()` is called.
     /// Called by the schedule view during relayout and dragging operations to
     /// preserve data integrity.
-    internal func freeze() {
+    public func freeze() {
         guard !isFrozen else {
             print("Warning: Called freeze() on an already frozen holder.")
             return
@@ -206,7 +294,7 @@ internal final class SCKEventHolder: NSObject {
     /// any pending changes cached while the object was frozen. Called by the 
     /// schedule view during relayout and dragging operations to preserve data 
     /// integrity.
-    internal func unfreeze() {
+    public func unfreeze() {
         guard isFrozen else {
             print("Warning: Called unfreeze() on an already unfrozen holder.")
             return
@@ -222,7 +310,7 @@ internal final class SCKEventHolder: NSObject {
 }
 
 // MARK: - Change observation
-internal extension SCKEventHolder {
+public extension SCKEventHolder {
     /// A wrapper around a deferred change from the `representedObject`.
     private struct DelayedChange {
         /// The changed key path.
@@ -249,13 +337,13 @@ internal extension SCKEventHolder {
     /// called by the event view when commiting a dragging operation to avoid
     /// observing its own changes. It's also called before deallocation when the
     /// controller discards it during a reload data phase.
-    internal func stopObservingRepresentedObjectChanges() {
+    public func stopObservingRepresentedObjectChanges() {
         shouldIgnoreChanges = true
     }
 
     /// Stops ignoring changes observed from `representedObject`. This method is
     /// called by the event view after commiting a dragging operation.
-    internal func resumeObservingRepresentedObjectChanges() {
+    public func resumeObservingRepresentedObjectChanges() {
         shouldIgnoreChanges = false
     }
 
@@ -285,7 +373,7 @@ internal extension SCKEventHolder {
 
                 let conflictsNow = Set(strongSelf.controller!.resolvedConflicts(for: strongSelf))
                 let updatingHolders = strongSelf.previousConflicts.union(conflictsNow)
-                let updatingViews = updatingHolders.flatMap { $0.eventView }
+                let updatingViews = updatingHolders.compactMap { $0.eventView }
                 strongSelf.eventView?.scheduleView?.invalidateLayout(for: updatingViews)
             }
 
@@ -317,7 +405,7 @@ internal extension SCKEventHolder {
                 }
                 let conflictsNow = Set(strongSelf.controller!.resolvedConflicts(for: strongSelf))
                 let updatingHolders = strongSelf.previousConflicts.union(conflictsNow)
-                let updatingViews = updatingHolders.flatMap { $0.eventView }
+                let updatingViews = updatingHolders.compactMap { $0.eventView }
                 strongSelf.eventView?.scheduleView?.invalidateLayout(for: updatingViews)
             }
 
@@ -358,6 +446,71 @@ internal extension SCKEventHolder {
                 if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
                     && change.oldValue != change.newValue {
                     strongSelf.eventView?.backgroundColor = updatedUser.eventColor
+                    strongSelf.eventView?.reducedEmphasisBackgroundColor = updatedUser.reducedEmphasisEventColor
+                    strongSelf.eventView?.needsDisplay = true
+                }
+            }
+            self.processOrEnqueueChange(closure: closure, parameter: event.user)
+        }
+        changeObserations.append(observation)
+    }
+
+    private func addUserReducedEmphasisEventColorObserver<T: SCKEvent>(on object: T) {
+        let keyPath: KeyPath<T, NSColor> = \T.user.reducedEmphasisEventColor
+        let observation = object.observe(keyPath, options: [.old, .new]) { [unowned self] (event, change) in
+            guard !self.shouldIgnoreChanges else { return }
+
+            let closure: ((SCKUser) -> Void) = { [weak self] (updatedUser) in
+                guard let strongSelf = self else { return }
+                if strongSelf.cachedUser !== updatedUser {
+                    strongSelf.cachedUser = updatedUser
+                }
+                if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
+                    && change.oldValue != change.newValue {
+                    strongSelf.eventView?.backgroundColor = updatedUser.eventColor
+                    strongSelf.eventView?.reducedEmphasisBackgroundColor = updatedUser.reducedEmphasisEventColor
+                    strongSelf.eventView?.needsDisplay = true
+                }
+            }
+            self.processOrEnqueueChange(closure: closure, parameter: event.user)
+        }
+        changeObserations.append(observation)
+    }
+
+    private func addUserEventOverlayColorObserver<T: SCKEvent>(on object: T) {
+        let keyPath: KeyPath<T, NSColor> = \T.user.eventOverlayColor
+        let observation = object.observe(keyPath, options: [.old, .new]) { [unowned self] (event, change) in
+            guard !self.shouldIgnoreChanges else { return }
+
+            let closure: ((SCKUser) -> Void) = { [weak self] (updatedUser) in
+                guard let strongSelf = self else { return }
+                if strongSelf.cachedUser !== updatedUser {
+                    strongSelf.cachedUser = updatedUser
+                }
+                if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
+                    && change.oldValue != change.newValue {
+                    strongSelf.eventView?.overlayColor = updatedUser.eventOverlayColor
+                    strongSelf.eventView?.needsDisplay = true
+                }
+            }
+            self.processOrEnqueueChange(closure: closure, parameter: event.user)
+        }
+        changeObserations.append(observation)
+    }
+
+    private func addUserReducedEmphasisEventOverlayColorObserver<T: SCKEvent>(on object: T) {
+        let keyPath: KeyPath<T, NSColor> = \T.user.reducedEmphasisEventOverlayColor
+        let observation = object.observe(keyPath, options: [.old, .new]) { [unowned self] (event, change) in
+            guard !self.shouldIgnoreChanges else { return }
+
+            let closure: ((SCKUser) -> Void) = { [weak self] (updatedUser) in
+                guard let strongSelf = self else { return }
+                if strongSelf.cachedUser !== updatedUser {
+                    strongSelf.cachedUser = updatedUser
+                }
+                if strongSelf.eventView?.scheduleView?.colorMode == .byEventOwner
+                    && change.oldValue != change.newValue {
+                    strongSelf.eventView?.reducedEmphasisOverlayColor = updatedUser.reducedEmphasisEventOverlayColor
                     strongSelf.eventView?.needsDisplay = true
                 }
             }

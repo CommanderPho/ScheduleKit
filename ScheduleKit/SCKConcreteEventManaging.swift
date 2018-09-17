@@ -59,8 +59,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     /// - Parameters:
     ///   - controller: The SCKViewController requesting events.
     ///   - request: The just created event request.
-    func scheduleController(_ controller: SCKViewController,
-                            didMakeConcreteEventRequest request: SCKConcreteEventRequest<EventType>)
+    func scheduleController(_ controller: SCKViewController, didMakeConcreteEventRequest request: SCKConcreteEventRequest<EventType>)
 
     // MARK: - Event selection
 
@@ -81,6 +80,11 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - event: The double clicked event.
     func scheduleController(_ controller: SCKViewController, didDoubleClickConcreteEvent event: EventType)
 
+    func scheduleController(_ controller: SCKViewController, mouseDidEnterConcreteEvent event: EventType)
+    func scheduleController(_ controller: SCKViewController, mouseDidExitConcreteEvent event: EventType)
+
+
+
     // MARK: Event changing
 
     /// Implement this method to conditionally allow or deny a user-initiated
@@ -93,9 +97,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - oldValue: The current event's duration in minutes.
     ///   - newValue: The proposed event's duration in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDurationOfConcreteEvent event: EventType,
-                            from oldValue: Int, to newValue: Int) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDurationOfConcreteEvent event: EventType, from oldValue: Int, to newValue: Int) -> Bool
 
     /// Implement this method to conditionally allow or deny a user-initiated
     /// date change in one of the events managed by a SCKViewController. If
@@ -107,9 +109,7 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///   - oldValue: The current event's scheduled date in minutes.
     ///   - newValue: The proposed event's schaduled date in minutes.
     /// - Returns: `true` if the change should be commited or `false` instead.
-    func scheduleController(_ controller: SCKViewController,
-                            shouldChangeDateOfConcreteEvent event: EventType,
-                            from oldValue: Date, to newValue: Date) -> Bool
+    func scheduleController(_ controller: SCKViewController, shouldChangeDateOfConcreteEvent event: EventType, from oldValue: Date, to newValue: Date) -> Bool
 
     // MARK: Contextual menu
 
@@ -123,6 +123,18 @@ public protocol SCKConcreteEventManaging: SCKEventManaging {
     ///            `nil` if you don't want to display a menu for this particular
     ///            event.
     func scheduleController(_ controller: SCKViewController, menuForConcreteEvent event: EventType) -> NSMenu?
+
+    /// Implement this method to conditionally provide a customized view for
+    /// one or more events in a schedule view.
+    ///
+    /// - Parameters:
+    ///   - controller: The SCKViewController managing a right clicked event.
+    ///   - event: The event to be displayed in the returned view
+    /// - Returns: An SCKEventView subclassed object to will be displayed as the event view or
+    ///            `nil` if you want to use the default view for this particular
+    ///            event.
+    func scheduleController(_ controller: SCKViewController, viewForConcreteEvent event: EventType) -> SCKEventView?
+
 }
 
 // MARK: - SCKConcreteEventManaging <-> SCKEventManaging translation
@@ -157,6 +169,15 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
         scheduleController(controller, didDoubleClickConcreteEvent: casted(event))
     }
 
+    public func scheduleController(_ controller: SCKViewController, mouseDidEnterEvent event: SCKEvent) {
+        scheduleController(controller, mouseDidEnterConcreteEvent: casted(event))
+    }
+
+    public func scheduleController(_ controller: SCKViewController, mouseDidExitEvent event: SCKEvent) {
+        scheduleController(controller, mouseDidExitConcreteEvent: casted(event))
+    }
+
+
     public func scheduleController(_ controller: SCKViewController,
                                    shouldChangeDurationOfEvent event: SCKEvent,
                                    from oldValue: Int, to newValue: Int) -> Bool {
@@ -174,7 +195,13 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
     public func scheduleController(_ controller: SCKViewController, menuForEvent event: SCKEvent) -> NSMenu? {
         return scheduleController(controller, menuForConcreteEvent: casted(event))
     }
+
+    func scheduleController(_ controller: SCKViewController, viewForEvent event: SCKEvent) -> SCKEventView? { return scheduleController(controller, viewForConcreteEvent: casted(event)); }
 }
+
+
+
+
 
 public extension SCKConcreteEventManaging where EventType: SCKEvent {
 
@@ -209,6 +236,9 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
 
     }
 
+    public func scheduleController(_ controller: SCKViewController, mouseDidEnterConcreteEvent event: EventType) {}
+    public func scheduleController(_ controller: SCKViewController, mouseDidExitConcreteEvent event: EventType) {}
+
     public func scheduleController(_ controller: SCKViewController,
                                    shouldChangeDurationOfConcreteEvent event: EventType,
                                    from oldValue: Int, to newValue: Int) -> Bool {
@@ -225,4 +255,7 @@ public extension SCKConcreteEventManaging where EventType: SCKEvent {
                                    menuForConcreteEvent event: EventType) -> NSMenu? {
         return nil
     }
+
+
+    public func scheduleController(_ controller: SCKViewController, viewForConcreteEvent event: EventType) -> SCKEventView? { return nil }
 }
