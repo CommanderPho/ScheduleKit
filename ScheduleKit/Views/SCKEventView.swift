@@ -26,9 +26,6 @@
 
 import Cocoa
 
-
-
-
 /// The view class used by ScheduleKit to display each event in a schedule view.
 /// This view is responsible of managing a descriptive label and also of handling
 /// mouse events, including drag and drop operations, which may derive in changes
@@ -36,7 +33,7 @@ import Cocoa
 @objc open class SCKEventView: NSView {
 
     /// The event holder represented by this view.
-    internal var eventHolder: SCKEventHolder! {
+    open var eventHolder: SCKEventHolder! {
         didSet {
             innerLabel.stringValue = eventHolder.cachedTitle
             innerLabel.textColor = self.labelTextColor
@@ -48,7 +45,7 @@ import Cocoa
     /// dragging the view from the bottom edge. The title value is updated
     /// automatically by the event holder when a change in the event's title is 
     /// observed.
-    private(set) var innerLabel: SCKTextField = {
+    open var innerLabel: SCKTextField = {
         let _label = SCKTextField(frame: .zero)
         _label.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 249), for: .horizontal)
         _label.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(rawValue: 249), for: .vertical)
@@ -56,7 +53,7 @@ import Cocoa
         return _label
     }()
 
-    public var innerLabelFont: NSFont = NSFont.systemFont(ofSize: 12.0)  {
+    open var innerLabelFont: NSFont = NSFont.systemFont(ofSize: 12.0)  {
         didSet {
             self.innerLabel.font = self.innerLabelFont
             self.innerLabel.setNeedsDisplay()
@@ -85,21 +82,24 @@ import Cocoa
         }
     }
 
-    internal var needsTimeSubindicatorLine: Bool {
+    public var needsTimeSubindicatorLine: Bool {
         guard let validConfig = self.timeSubindicatorConfig else { return false }
 //        return validConfig.shouldDisplay
         return true
     }
 
-    internal var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
+    public var timeSubindicatorConfig: SCKEventTimeSubindicatorConfig? = nil {
         didSet {
+            if (self.timeSubindicatorConfig?.color == nil) {
+                self.timeSubindicatorConfig?.color = self.overlayColor
+            }
             self.needsDisplay = true
         }
     }
 
     //internal var timeSubindicatorLineConfig
 
-    private func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
+    public func drawTimeSubindicatorLine(_ dirtyRect: CGRect) {
         guard let validConfig = self.timeSubindicatorConfig else { return }
         //let currentSize = self.frame.size
         let currentSize = dirtyRect.size
@@ -130,7 +130,7 @@ import Cocoa
         path.stroke()
     }
 
-    private var labelTextColor: NSColor {
+    public var labelTextColor: NSColor {
         let isAnyViewSelected = (scheduleView.selectedEventView != nil)
         let isThisViewSelected = (scheduleView.selectedEventView == self)
         var currentOverlayColor: NSColor
@@ -167,8 +167,9 @@ import Cocoa
         return currentOverlayColor
     }
 
-    private func updateOverlayColor() {
+    public func updateOverlayColor() {
         self.innerLabel.textColor = self.labelTextColor
+        self.timeSubindicatorConfig?.color = self.labelTextColor
         self.innerLabel.setNeedsDisplay()
     }
 
@@ -255,7 +256,7 @@ import Cocoa
     // MARK: - View lifecycle
 
     /// The `SCKView` instance to which this view has been added.
-    internal weak var scheduleView: SCKView!
+    public weak var scheduleView: SCKView!
 
     open override func viewDidEndLiveResize() {
         super.viewDidEndLiveResize()
@@ -263,11 +264,11 @@ import Cocoa
     }
 
     open override func viewDidMoveToSuperview() {
-        scheduleView = superview as? SCKView
+        self.scheduleView = superview as? SCKView
         // Add the title label to the view hierarchy.
         if superview != nil && innerLabel.superview == nil {
-            innerLabel.frame = CGRect(origin: .zero, size: frame.size)
-            addSubview(innerLabel)
+            self.innerLabel.frame = CGRect(origin: .zero, size: frame.size)
+            self.addSubview(self.innerLabel)
         }
         if superview != nil {
             let newTrackingArea = NSTrackingArea(rect: self.bounds, options: [.activeAlways, .mouseEnteredAndExited], owner: self, userInfo: nil)
@@ -299,7 +300,7 @@ import Cocoa
     /// - idle: The view is not being dragged yet.
     /// - draggingDuration: The view is being stretched vertically.
     /// - draggingContent: The view is being moved to another position.
-    private enum Status {
+    public enum Status {
         case idle
         case draggingDuration(oldValue: Int, lastValue: Int)
         case draggingContent(
@@ -310,7 +311,7 @@ import Cocoa
     }
 
     /// The view's drag and drop state.
-    private var draggingStatus: Status = .idle
+    public var draggingStatus: Status = .idle
 
     open override func mouseDragged(with event: NSEvent) {
         switch draggingStatus {
@@ -337,7 +338,7 @@ import Cocoa
         scheduleView.continueDragging()
     }
 
-    private func parseDurationDrag(with event: NSEvent) {
+    open func parseDurationDrag(with event: NSEvent) {
         guard case .draggingDuration(let old, let last) = draggingStatus else {
             return
         }
@@ -367,7 +368,7 @@ import Cocoa
         }
     }
 
-    private func parseContentDrag(with event: NSEvent) {
+    open func parseContentDrag(with event: NSEvent) {
         guard case .draggingContent(let old, _, let delta) = draggingStatus else {
             return
         }
@@ -450,7 +451,7 @@ import Cocoa
         needsDisplay = true
     }
 
-    private func commitDraggingOperation(withChanges closure: () -> Void) {
+    open func commitDraggingOperation(withChanges closure: () -> Void) {
         eventHolder.stopObservingRepresentedObjectChanges()
         closure()
         eventHolder.resumeObservingRepresentedObjectChanges()
@@ -459,7 +460,7 @@ import Cocoa
         scheduleView.invalidateLayoutForAllEventViews()
     }
 
-    private func flushUncommitedDraggingOperation() {
+    open func flushUncommitedDraggingOperation() {
         eventHolder.recalculateRelativeValues()
         scheduleView.invalidateLayout(for: self)
     }

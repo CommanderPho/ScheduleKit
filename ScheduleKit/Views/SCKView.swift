@@ -144,9 +144,7 @@ import Cocoa
     /// - Returns: The calculated date or `nil` if `relativeTimeLocation` is not
     ///            a value compressed between 0.0 and 1.0.
     public final func calculateDate(for relativeTimeLocation: SCKRelativeTimeLocation) -> Date? {
-        guard relativeTimeLocation >= 0.0 && relativeTimeLocation <= 1.0 else {
-            return nil
-        }
+        guard relativeTimeLocation >= 0.0 && relativeTimeLocation <= 1.0 else { return nil; }
         let start = dateInterval.start.timeIntervalSinceReferenceDate
         let length = dateInterval.duration * relativeTimeLocation
         var numberOfSeconds = Int(trunc(start + length))
@@ -165,25 +163,12 @@ import Cocoa
     ///            `SCKRelativeTimeLocationInvalid` if `date` is not contained in
     ///            that interval.
     public final func calculateRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
-        guard dateInterval.contains(date) else {
-            return SCKRelativeTimeLocationInvalid
-        }
+        guard dateInterval.contains(date) else { return SCKRelativeTimeLocationInvalid; }
         let dateRef = date.timeIntervalSinceReferenceDate
         let startDateRef = dateInterval.start.timeIntervalSinceReferenceDate
         return (dateRef - startDateRef) / dateInterval.duration
     }
 
-//    public final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
-//        let size = self.contentRect.size
-//        let totalHight: CGFloat = size.height
-//        if (totalHight <= 0.0) {
-//            return SCKRelativeTimeLengthInvalid
-//        }
-//        else {
-//            let percentHeight = height / totalHight
-//            return SCKRelativeTimeLength(percentHeight)
-//        }
-//    }
 
     /// Calculates the relative time location in the view's date interval for a
     /// given point in the view's coordinate system. The default implementation
@@ -198,19 +183,44 @@ import Cocoa
         return SCKRelativeTimeLocationInvalid
     }
 
+    /// Calculates the relative time length in the view's date interval for a
+    /// given height in the view's coordinate system. The default implementation
+    /// returns `SCKRelativeTimeLengthInvalid`. Subclasses must override this
+    /// method in order to be able to transform screen heights into date lengths.
+    ///
+    /// - Parameter height: The height for which to perform the calculation.
+    /// - Returns: A value between 0.0 and 1.0 representing the relative time
+    ///            length for the given point, or `SCKRelativeTimeLengthInvalid`
+    ///            in case `height` falls out of the view's content rect.
+    public func relativeTimeLength(for height: CGFloat) -> SCKRelativeTimeLength {
+        return SCKRelativeTimeLengthInvalid
+    }
+
+    //    public final func calculateRelativeTimeDuration(for height: CGFloat) -> SCKRelativeTimeLength {
+    //        let size = self.contentRect.size
+    //        let totalHight: CGFloat = size.height
+    //        if (totalHight <= 0.0) {
+    //            return SCKRelativeTimeLengthInvalid
+    //        }
+    //        else {
+    //            let percentHeight = height / totalHight
+    //            return SCKRelativeTimeLength(percentHeight)
+    //        }
+    //    }
+
 
 
     // MARK: - Subview management
 
     /// An array containing all the event views displayed in this view.
-    private(set) var eventViews: [SCKEventView] = []
+    open var eventViews: [SCKEventView] = []
 
     /// Registers a recently created `SCKEventView` with this instance. This
     /// method is called from the controller after adding the view as a subview
     /// of this schedule view. You should not call this method directly.
     ///
     /// - Parameter eventView: The event view to be added.
-    internal final func addEventView(_ eventView: SCKEventView) {
+    open func addEventView(_ eventView: SCKEventView) {
         eventViews.append(eventView)
     }
 
@@ -220,7 +230,7 @@ import Cocoa
     ///
     /// - Parameter eventView: The event view to be removed. Must have been added
     ///                        previously via `addEventView(_:)`.
-    internal final func removeEventView(_ eventView: SCKEventView) {
+    open func removeEventView(_ eventView: SCKEventView) {
         guard let index = eventViews.index(of: eventView) else {
             Swift.print("Warning: Attempting to remove an unregistered event view")
             return
@@ -233,7 +243,7 @@ import Cocoa
     /// The portion of the view used to display events. Defaults to the full view
     /// frame. Subclasses override this property if they display additional items
     /// such as day or hour labels alongside the event views.
-    public var contentRect: CGRect {
+    open var contentRect: CGRect {
         return CGRect(origin: .zero, size: frame.size)
     }
 
@@ -262,7 +272,7 @@ import Cocoa
     /// - Parameter eventView: The event view whose frame will be updated soon.
     /// - Note: Since the event view's frame will be eventually calculated in the
     ///         `layout()` method, you must avoid changing its frame in this one.
-    func invalidateLayout(for eventView: SCKEventView) { }
+    open func invalidateLayout(for eventView: SCKEventView) { }
 
     /// Triggers a series of operations that determine the frame of an array of
     /// `SCKEventView`s according to their event holder's properties and to other
@@ -293,16 +303,16 @@ import Cocoa
         if let draggedView = eventViewBeingDragged, let idx = holdersToFreeze.index(of: draggedView.eventHolder) {
             holdersToFreeze.remove(at: idx)
         }
-
+        // Freeze the event holders in preparation for invalidation
         holdersToFreeze.forEach { $0.freeze() }
 
-        // 3. Perform invalidation
+        // 3. Perform invalidation by calling self.invalidateLayout(for: each individual event view).
         eventViews.forEach { invalidateLayout(for: $0) }
 
-        // 4. Unfreeze event holders
+        // 4. Unfreeze event holders once layout is invalidated
         holdersToFreeze.forEach { $0.unfreeze() }
 
-        // 5. Mark as needing layout
+        // 5. Mark self as needing layout
         needsLayout = true
 
         // 6. Animate if requested
@@ -350,7 +360,7 @@ import Cocoa
     /// `scheduleController(_:didSelectEvent:)` methods on the controller`s event
     /// manager when appropiate. In addition, it marks all event views as needing
     /// display in order to make them reflect the current selection.
-    internal(set) weak var selectedEventView: SCKEventView? {
+    open weak var selectedEventView: SCKEventView? {
         willSet {
             self.willSetSelectedEventView(newValue: newValue)
         }
@@ -361,7 +371,7 @@ import Cocoa
 
     private var isBlockingSelectionDelegateCalling: Bool = false
     // Updates the event view object without calling cascading delegates
-    internal func safeUpdateSelectedEventView(_ newValue: SCKEventView?, shouldCallDelegates: Bool) {
+    open func safeUpdateSelectedEventView(_ newValue: SCKEventView?, shouldCallDelegates: Bool) {
         // Unblock delegate calling if needed
         if (!shouldCallDelegates) {
             self.isBlockingSelectionDelegateCalling = true
@@ -373,14 +383,14 @@ import Cocoa
         }
     }
 
-    private func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
+    open func willSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
         if selectedEventView != nil && newValue == nil {
             if (shouldCallDelegates && !self.isBlockingSelectionDelegateCalling) {
                 controller.eventManager?.scheduleControllerDidClearSelection(controller)
             }
         }
     }
-    private func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
+    open func didSetSelectedEventView(newValue: SCKEventView?, shouldCallDelegates: Bool = true) {
         for eventView in eventViews {
             eventView.needsDisplay = true
         }

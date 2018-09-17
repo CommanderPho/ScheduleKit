@@ -90,7 +90,7 @@ open class SCKGridView: SCKView {
         didSet { // Set up day count and day labels
             let sD = dateInterval.start
             let eD = dateInterval.end.addingTimeInterval(1)
-            dayCount = sharedCalendar.dateComponents([.day], from: sD, to: eD).day!
+            self.dayCount = sharedCalendar.dateComponents([.day], from: sD, to: eD).day!
             configureDayLabels()
             _ = self.minuteTimer
         }
@@ -150,6 +150,7 @@ open class SCKGridView: SCKView {
         label.stringValue = text
         label.font = .systemFont(ofSize: size)
         label.textColor = color
+        label.setAccessibilityIdentifier("SCKDayOrHourLabel")
         label.sizeToFit() // Needed
         return label
     }
@@ -181,10 +182,19 @@ open class SCKGridView: SCKView {
         }
         self.dayLabels.removeAll(keepingCapacity: true)
         self.monthLabels.removeAll(keepingCapacity: true)
-        if (shouldConfigure) {
-            self.configureDayLabels()
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let finalShouldConfigure: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            finalShouldConfigure = (shouldConfigure && (!validLabelDelegate.shouldDisableDayHeaderLabels))
+        }
+        else {
+            finalShouldConfigure = shouldConfigure
         }
 
+        if (finalShouldConfigure) {
+            self.configureDayLabels()
+        }
     }
 
     func resetLabels(andConfigure shouldConfigure: Bool) {
@@ -241,6 +251,23 @@ open class SCKGridView: SCKView {
     /// interval. Eventually marks the view as needing layout. This method is 
     /// called whenever the day interval property changes.
     private func configureDayLabels() {
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let labelsAreEnabled: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            labelsAreEnabled = (!validLabelDelegate.shouldDisableDayHeaderLabels)
+        }
+        else {
+            labelsAreEnabled = true
+        }
+
+        // If labels are not enabled, we reset them (removing them from the views and deallocating them) without configuring them (as not to recreate them)
+        if (!labelsAreEnabled) {
+            self.resetDayLabels(andConfigure: false)
+            needsLayout = true
+            return
+        }
+
         // 1. Generate missing labels
         for day in 0..<dayCount {
             if dayLabels.count > day { // Skip already created labels
@@ -270,8 +297,8 @@ open class SCKGridView: SCKView {
                 monthLabels[day].removeFromSuperview()
             } else if day < dayCount {
                 if dayLabel.superview == nil {
-                    dayLabelingView.addSubview(dayLabel)
-                    dayLabelingView.addSubview(monthLabels[day])
+                    self.dayLabelingView.addSubview(dayLabel)
+                    self.dayLabelingView.addSubview(monthLabels[day])
                 }
                 let date = sharedCalendar.date(byAdding: .day, value: day, to: dateInterval.start)!
                 let text: String
@@ -387,22 +414,104 @@ open class SCKGridView: SCKView {
 
     // MARK: - Date transform additions
 
+    // Converts between a DateInterval relative time location and a day relative time location
+    public final func convertToDayRelative(totalRelativeTimeLocation: SCKRelativeTimeLocation) -> (dayIndex: Int, dayRelative: SCKRelativeTimeLocation)? {
+        if (totalRelativeTimeLocation == SCKRelativeTimeLocationInvalid) { return nil }
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay: Double = 1.0 / Double(self.dayCount)
+        let totalMinutesPerDay: Double = 60.0 * Double(self.hourCount)
+        // day: The integer day index to which the point belongs
+        let day: Int = Int(trunc(totalRelativeTimeLocation/offsetPerDay))
+        // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
+        let dayStartOffset: Double = offsetPerDay * Double(day)
+
+        let remainder: Double = totalRelativeTimeLocation - dayStartOffset
+        // inverseResult is in seconds
+        let inverseResult: Double = (self.dateInterval.duration * remainder)
+        let inverseResultMinutes: Double = inverseResult * Double(60.0)
+        let result: SCKRelativeTimeLocation = (inverseResultMinutes / totalMinutesPerDay)
+        return (day, result)
+    }
+
+
+
+
+//    public final func calculateDayRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
+//        guard dateInterval.contains(date) else { return SCKRelativeTimeLocationInvalid; }
+//        let dateRef = date.timeIntervalSinceReferenceDate
+//        let startDateRef = dateInterval.start.timeIntervalSinceReferenceDate
+//        return (dateRef - startDateRef) / dateInterval.duration
+//    }
+
 
     // Given any point within the rectangle, determines the time it should occur on.
     override open func relativeTimeLocation(for point: CGPoint) -> Double {
         if contentRect.contains(point) {
+            // dayWidth: The screen width of each day
             let dayWidth: CGFloat = contentRect.width / CGFloat(dayCount)
+            // offsetPerDay: Gives the relative offset at the start of each day.
             let offsetPerDay = 1.0 / Double(dayCount)
+            // day: The integer day index to which the point belongs
             let day = Int(trunc((point.x-contentRect.minX)/dayWidth))
+            // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
             let dayOffset = offsetPerDay * Double(day)
+
+            // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+            // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
             let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+            // offsetPerHour: Gives the relative offset (length) for each hour.
             let offsetPerHour = 60.0 * offsetPerMin
-            let totalMinutes = 60.0 * CGFloat(hourCount)
-            let minute = totalMinutes * (point.y - contentRect.minY) / contentRect.height
+            let totalMinutesPerDay = 60.0 * CGFloat(hourCount)
+            let minute = totalMinutesPerDay * (point.y - contentRect.minY) / contentRect.height
             let minuteOffset = offsetPerMin * Double(minute)
-            return dayOffset + offsetPerHour * Double(firstHour) + minuteOffset
+            return dayOffset + (offsetPerHour * Double(firstHour)) + minuteOffset
         }
         return SCKRelativeTimeLocationInvalid
+    }
+
+
+    open func relativeScreenHeight(forAbsoluteNumberMinutes absoluteMin: Double) -> CGFloat? {
+        let canvas = contentRect
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        if (dayTotalMinutes <= 0.0) { return nil }
+        let m: Double = (absoluteMin / dayTotalMinutes)
+        let relScreenHeight: Double = m
+        let absoluteScreenHeight: CGFloat = canvas.height * CGFloat(relScreenHeight)
+//        let absoluteOffset: CGFloat = canvas.minY + absoluteScreenHeight
+        return absoluteScreenHeight
+    }
+
+
+
+
+//    open func relativeScreenHeight(for offset: SCKRelativeTimeLength) -> CGFloat {
+//        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+//        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+//        return (offsetPerMin * offset)
+//    }
+
+
+    override open func relativeTimeLength(for height: CGFloat) -> SCKRelativeTimeLength {
+        let canvas = contentRect
+        if (canvas.height < height) { return SCKRelativeTimeLengthInvalid }
+        // percentHeight: maps on to a scale of 0.0 - 1.0 for the day
+        let percentHeight: Double = Double(height) / Double(canvas.height)
+        // Now just convert from day relative to duration relative
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        let dayTotalSeconds: Double = (dayTotalMinutes * 60.0)
+        if (dayTotalSeconds <= 0.0) { return SCKRelativeTimeLengthInvalid }
+
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay = 1.0 / Double(dayCount)
+        let dateIntervalTotalSeconds = dateInterval.duration
+        let result: SCKRelativeTimeLength = (percentHeight * (dayTotalSeconds / dateIntervalTotalSeconds))
+        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+        return result
     }
 
     /// Returns the Y-axis position in the view's coordinate system that represents a particular hour and
@@ -427,8 +536,9 @@ open class SCKGridView: SCKView {
     }
 
     override open func invalidateLayout(for eventView: SCKEventView) {
-        // Overriden to manage event conflicts. No need to call super in this case.
-        let conflicts = controller.resolvedConflicts(for: eventView.eventHolder)
+        // Overriden to manage event conflicts. No need to call super in this case because it does nothing.
+        // Gets the conflicts (overlapping events) for this specific eventView
+        let conflicts: [SCKEventHolder] = controller.resolvedConflicts(for: eventView.eventHolder)
         if !conflicts.isEmpty {
             eventView.eventHolder.conflictCount = conflicts.count
         } else {
@@ -468,23 +578,47 @@ open class SCKGridView: SCKView {
         return dayWidth
     }
 
+
+    //MARK: -
+    //MARK: - layout()
     open override func layout() {
         super.layout();
-        let canvas = contentRect
+        let canvas: CGRect = contentRect
         guard dayCount > 0 else { return } // View is not ready
 
-        // Layout day labels
+        let marginLeft: CGFloat = self.Constants.paddingLeft
+        let dayLabelsRect: CGRect = self.dayLabelsRect!
+        let dayWidth: CGFloat = self.dayWidth!
 
-        let marginLeft = self.Constants.paddingLeft
-        let dayLabelsRect = self.dayLabelsRect!
-        let dayWidth = self.dayWidth!
-//        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
-//        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
+        // Layout day labels
+        self.layoutDayLabels(canvas: canvas, marginLeft: marginLeft, dayWidth: dayWidth)
+
+        // Layout hour labels
+        self.layoutHourLabels(canvas: canvas, marginLeft: marginLeft)
+
+        // Layout events
+        let offsetPerDay: Double = 1.0/Double(self.dayCount)
+        self.layoutEvents(canvas: canvas, dayWidth: dayWidth, offsetPerDay: offsetPerDay)
+    }
+
+    //MARK: -
+    //MARK: - layoutDayLabels(...)
+    // called only by layout()
+    open func layoutDayLabels(canvas: CGRect, marginLeft: CGFloat, dayWidth: CGFloat) {
         self.dayColumnRectangles.removeAll(keepingCapacity: true)
 
         for day in 0..<dayCount {
             let minX = marginLeft + (CGFloat(day) * dayWidth);
             let midY = Constants.DayAreaHeight/2.0
+            // Add the day label rect
+            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
+
+            // Set up the day/month labels if enabled, otherwise just continue to the next day
+            if let validLabelDelegate = self.labelManagingDelegate {
+                if (validLabelDelegate.shouldDisableDayHeaderLabels) {
+                    continue; // continue without messing around with the day or month labels (as they don't exist)
+                }
+            }
             let dLabel = dayLabels[day]
             let o = CGPoint(x: minX + dayWidth/2.0 - dLabel.frame.width/2.0, y: midY - dLabel.frame.height/2.0)
             var r = CGRect(origin: o, size: dLabel.frame.size)
@@ -495,11 +629,14 @@ open class SCKGridView: SCKView {
                 mLabel.frame = CGRect(origin: mOrigin, size: mLabel.frame.size)
             }
             dLabel.frame = r
-            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
         }
+    }
 
-        // Layout hour labels
-        for (i, label) in hourLabels {
+    //MARK: -
+    //MARK: - layoutHourLabels(...)
+    // called only by layout()
+    open func layoutHourLabels(canvas: CGRect, marginLeft: CGFloat) {
+        for (i, label) in self.hourLabels {
             let size = label.frame.size
             switch i {
             case 0..<24: // Hour label
@@ -512,10 +649,12 @@ open class SCKGridView: SCKView {
                 label.frame = CGRect(origin: o, size: size)
             }
         }
+    }
 
-        //MARK: -
-        //MARK: - Layout events
-        let offsetPerDay = 1.0/Double(dayCount)
+    //MARK: -
+    //MARK: - layoutEvents(...)
+    // called only by layout()
+    open func layoutEvents(canvas: CGRect, dayWidth: CGFloat, offsetPerDay: Double) {
         for eventView in subviews.compactMap({ $0 as? SCKEventView }) where eventView.eventHolder.isReady {
             let holder = eventView.eventHolder!
             let day = Int(trunc(holder.relativeStart/offsetPerDay))
@@ -531,6 +670,13 @@ open class SCKGridView: SCKView {
             eventView.frame |= newFrame
         }
     }
+
+
+
+
+
+
+
 
     open override func resize(withOldSuperviewSize oldSize: NSSize) {
         super.resize(withOldSuperviewSize: oldSize) // Triggers layout. Try to acommodate hour height.
@@ -754,6 +900,7 @@ open class SCKGridView: SCKView {
         CGRect(x: canvas.minX, y: yOrigin-0.25, width: canvas.width, height: 0.5).fill()
         NSBezierPath(ovalIn: CGRect(x: canvas.minX-2.0, y: yOrigin-2.0, width: 4.0, height: 4.0)).fill()
     }
+
 
     open func drawDraggingGuidesIfNeeded() {
         guard let dV = eventViewBeingDragged else {return}

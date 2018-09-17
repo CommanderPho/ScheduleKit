@@ -40,6 +40,12 @@ public struct SCKDayPoint {
         return self.init(hour: 0, minute: 0, second: 0)
     }
 
+    static var max: SCKDayPoint {
+        return self.init(hour: 24, minute: 0, second: -1)
+    }
+
+
+
     /// Convenience initializer. Creates a new SCKDayPoint object with hour, minute and
     /// second extracted from an Date object.
     ///
