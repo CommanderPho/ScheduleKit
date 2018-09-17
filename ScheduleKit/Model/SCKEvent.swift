@@ -55,6 +55,15 @@ import Cocoa
     @objc var user: SCKUser { get }
 }
 
+
+public extension SCKEvent {
+	// The interval spanning the event and its duration
+	var eventInterval: DateInterval { return DateInterval(start: self.scheduledDate, duration: TimeInterval.init(self.duration)) }
+	var eventEndDate: Date { return self.eventInterval.end }
+}
+
+
+
 public func ==(lhs: SCKEvent, rhs: SCKEvent) -> Bool {
     if (lhs.scheduledDate != rhs.scheduledDate) || (lhs.duration != rhs.duration) || (lhs.eventKind != rhs.eventKind) || (lhs.title != rhs.title) || (lhs.user == rhs.user) { return false }
     return true
