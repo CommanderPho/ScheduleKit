@@ -80,6 +80,7 @@ import AppKit
     /// Installs a new schedule view as the scroll view's document view, according to the value set in `mode`.
     open func setUpScheduleView() {
         let oldDelegate = scheduleView?.delegate
+		let oldSpecificDelegate = scheduleView?.specificDelegate
         let oldColorDelegate = scheduleView?.colorManagingDelegate
         let oldLabelDelegate = scheduleView?.labelManagingDelegate
         let oldLayoutDelegate = scheduleView?.layoutManagingDelegate
@@ -98,6 +99,7 @@ import AppKit
         self.scheduleView = sView
         sView.controller = self
         sView.delegate = oldDelegate
+		sView.specificDelegate = oldSpecificDelegate
         sView.colorManagingDelegate = oldColorDelegate
         sView.labelManagingDelegate = oldLabelDelegate
         sView.layoutManagingDelegate = oldLayoutDelegate
@@ -137,7 +139,6 @@ import AppKit
     // MARK: - Event management
 
     /// The set of event holders backing the events managed by this controller.
-//    private(set) var eventHolders: Set<SCKEventHolder> = []
     open var eventHolders: Set<SCKEventHolder> = []
 
     /// The object that works as the data source and delegate for this controller. A common implementation when

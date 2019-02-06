@@ -140,7 +140,14 @@ import Cocoa
                 switch scheduleView.colorMode {
 				case .bySpecificEvent:
 					let event = eventHolder.representedObject
-					let color = scheduleView.specificDelegate?.reducedEmphasisOverlayColor(for: event, in: scheduleView)
+					let color: NSColor?
+					if let validSpecificDelegate = scheduleView.specificDelegate {
+						color = validSpecificDelegate.reducedEmphasisOverlayColor(for: event, in: scheduleView)
+					}
+					else { // Fallback to .byEventKind values
+						let kind = eventHolder.representedObject.eventKind
+						color = scheduleView.delegate?.reducedEmphasisOverlayColor?(for: kind, in: scheduleView)
+					}
 					reducedEmphasisOverlayColor = color ?? scheduleView.defaultEventReducedEmphasisOverlayColor
                 case .byEventKind:
                     let kind = eventHolder.representedObject.eventKind
@@ -159,8 +166,15 @@ import Cocoa
                 switch scheduleView.colorMode {
 				case .bySpecificEvent:
 					let event = eventHolder.representedObject
-					let color = scheduleView.specificDelegate?.overlayColor(for: event, in: scheduleView)
-					reducedEmphasisOverlayColor = color ?? scheduleView.defaultEventReducedEmphasisOverlayColor
+					let color: NSColor?
+					if let validSpecificDelegate = scheduleView.specificDelegate {
+						color = validSpecificDelegate.overlayColor(for: event, in: scheduleView)
+					}
+					else { // Fallback to .byEventKind values
+						let kind = eventHolder.representedObject.eventKind
+						color = scheduleView.delegate?.overlayColor?(for: kind, in: scheduleView)
+					}
+					overlayColor = color ?? scheduleView.defaultEventReducedEmphasisOverlayColor
                 case .byEventKind:
                     let kind = eventHolder.representedObject.eventKind
                     let color = scheduleView.delegate?.overlayColor?(for: kind, in: scheduleView)
@@ -211,8 +225,15 @@ import Cocoa
                 switch scheduleView.colorMode {
 				case .bySpecificEvent:
 					let event = eventHolder.representedObject
-					let color = scheduleView.specificDelegate?.reducedEmphasisColor(for: event, in: scheduleView)
-					backgroundColor = color ?? scheduleView.defaultEventReducedEmphasisBackgroundColor
+					let color: NSColor?
+					if let validSpecificDelegate = scheduleView.specificDelegate {
+						color = validSpecificDelegate.reducedEmphasisColor(for: event, in: scheduleView)
+					}
+					else { // Fallback to .byEventKind values
+						let kind = eventHolder.representedObject.eventKind
+						color = scheduleView.delegate?.reducedEmphasisColor?(for: kind, in: scheduleView)
+					}
+					reducedEmphasisBackgroundColor = color ?? scheduleView.defaultEventReducedEmphasisBackgroundColor
                 case .byEventKind:
                     let kind = eventHolder.representedObject.eventKind
                     let color = scheduleView.delegate?.reducedEmphasisColor?(for: kind, in: scheduleView)
@@ -231,7 +252,14 @@ import Cocoa
                 switch scheduleView.colorMode {
 				case .bySpecificEvent:
 					let event = eventHolder.representedObject
-					let color = scheduleView.specificDelegate?.color(for: event, in: scheduleView)
+					let color: NSColor?
+					if let validSpecificDelegate = scheduleView.specificDelegate {
+						color = validSpecificDelegate.color(for: event, in: scheduleView)
+					}
+					else { // Fallback to .byEventKind values
+						let kind = eventHolder.representedObject.eventKind
+						color = scheduleView.delegate?.color?(for: kind, in: scheduleView)
+					}
 					backgroundColor = color ?? scheduleView.defaultEventBackgroundColor
                 case .byEventKind:
                     let kind = eventHolder.representedObject.eventKind
