@@ -16,4 +16,7 @@ import Foundation
 
     /// Colors events according to their user's event color.
     case byEventOwner
+
+	/// Colors events according to event-specific properties specified by the specificDelegate
+	case bySpecificEvent
 }

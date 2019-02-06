@@ -125,7 +125,7 @@ open class SCKGridView: SCKView {
     }
 
     /// The total number of hours displayed.
-    internal var hourCount: Int = 1 {
+    internal var hourCount: Int = 24 {
         didSet { configureHourLabels() }
     }
 

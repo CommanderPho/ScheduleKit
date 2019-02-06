@@ -87,7 +87,9 @@ import Cocoa
 
     /// The schedule view's delegate.
     @objc public weak var delegate: SCKViewDelegate?
-    public weak var colorManagingDelegate: SCKColorManaging? {
+	public weak var specificDelegate: SCKViewSpecificEventTypeDelegate?
+
+	public weak var colorManagingDelegate: SCKColorManaging? {
         didSet {
             self.setUp()
         }
