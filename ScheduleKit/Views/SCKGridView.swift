@@ -529,8 +529,10 @@ open class SCKGridView: SCKView {
 
     // MARK: - Event Layout overrides
 
+	// So contentRect should be the correct size
     override open var contentRect: CGRect {
         // Exclude day and hour labeling areas.
+		// note y: is shifted down by both the day labeling area but also the DayAreaMarginBottom
         return CGRect(x: Constants.HourAreaWidth, y: Constants.paddingTop,
                       width: frame.width - Constants.HourAreaWidth, height: frame.height - Constants.paddingTop)
     }
