@@ -40,7 +40,7 @@ import Cocoa
     ///         you to define it with the event types you need.
     @objc var eventKind: Int { get }
 
-    /// The event's duration in minutes.
+    /// The event's duration in *minutes*.
     @objc var duration: Int { get set }
 
     /// The event's starting date and time.
@@ -57,12 +57,13 @@ import Cocoa
 
 
 public extension SCKEvent {
+	
+	var durationSeconds: Double { return (Double(self.duration) * 60.0); } // Convert from duration in minutes to duration specified in seconds
+	var eventTimeInterval: TimeInterval { return TimeInterval.init(self.durationSeconds); } // A TimeInterval value is always specified in seconds
 	// The interval spanning the event and its duration
-	var eventInterval: DateInterval { return DateInterval(start: self.scheduledDate, duration: TimeInterval.init(self.duration)) }
+	var eventInterval: DateInterval { return DateInterval(start: self.scheduledDate, duration: self.eventTimeInterval); }
 	var eventEndDate: Date { return self.eventInterval.end }
 }
-
-
 
 public func ==(lhs: SCKEvent, rhs: SCKEvent) -> Bool {
     if (lhs.scheduledDate != rhs.scheduledDate) || (lhs.duration != rhs.duration) || (lhs.eventKind != rhs.eventKind) || (lhs.title != rhs.title) || (lhs.user == rhs.user) { return false }
