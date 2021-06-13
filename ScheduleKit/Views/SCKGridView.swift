@@ -824,8 +824,8 @@ open class SCKGridView: SCKView {
     // For any given date in the dateInterval, returns origin of an event scheduled at the interval
     public func getCanvasPositionForDate(_ date: Date) -> CGPoint {
         let canvas = contentRect
-        let dayWidth: CGFloat = canvas.width / CGFloat(dayCount)
-        let offsetPerDay = 1.0/Double(dayCount)
+        let dayWidth: CGFloat = canvas.width / CGFloat(dayCount) // dayWidth in pixels
+        let offsetPerDay = 1.0/Double(dayCount) // offsetPerDay in percent
         /// The relative start time of the event in the `scheduleView` date bounds.
         let relativeStart = self.calculateRelativeTimeLocation(for: date)
         let day = Int(trunc(relativeStart/offsetPerDay))
