@@ -26,14 +26,6 @@
 
 import Cocoa
 
-/// Any type implementing the relevant methods for an `SCKEvent`'s user.
-@objc public protocol SCKUser: class {
-
-    /// The color that will be used as `SCKEventView`s background when displayed
-    /// in a `SCKView` with `colorMode` set to `.byEventOwner`.
-    @objc var eventColor: NSColor { get }
-}
-
 /// Any type implementing the properties required to define an event displayed in
 /// a `SCKView` subclass.
 @objc public protocol SCKEvent where Self: NSObject {
@@ -62,3 +54,20 @@ import Cocoa
     /// owner.
     @objc var user: SCKUser { get }
 }
+
+
+public extension SCKEvent {
+	// The interval spanning the event and its duration
+	var eventInterval: DateInterval { return DateInterval(start: self.scheduledDate, duration: TimeInterval.init(self.duration)) }
+	var eventEndDate: Date { return self.eventInterval.end }
+}
+
+
+
+public func ==(lhs: SCKEvent, rhs: SCKEvent) -> Bool {
+    if (lhs.scheduledDate != rhs.scheduledDate) || (lhs.duration != rhs.duration) || (lhs.eventKind != rhs.eventKind) || (lhs.title != rhs.title) || (lhs.user == rhs.user) { return false }
+    return true
+}
+
+
+

@@ -3,7 +3,7 @@
  *  ScheduleKit
  *
  *  Created:    Guillem Servera on 28/10/2016.
- *  Copyright:  © 2016-2019 Guillem Servera (https://github.com/gservera)
+ *  Copyright:  © 2016-2017 Guillem Servera (https://github.com/gservera)
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,6 @@
 
 import Cocoa
 
-/// An object conforming to the `SCKGridViewDelegate` protocol may implement a
-/// method to provide unavailable time ranges to a grid-style schedule view in
-/// addition to other methods defined in `SCKViewDelegate`.
-@objc public protocol SCKGridViewDelegate: SCKViewDelegate {
-
-    /// Implement this method to specify the first displayed hour. Defaults to 0.
-    /// - Parameter gridView: The grid view asking for a start hour.
-    /// - Returns: An hour value from 0 to 24.
-    @objc(dayStartHourForGridView:) func dayStartHour(for gridView: SCKGridView) -> Int
-
-    /// Implement this method to specify the last displayed hour. Defaults to 24.
-    /// - Parameter gridView: The grid view asking for a start hour.
-    /// - Returns: An hour value from 0 to 24, where 0 is parsed as 24.
-    @objc(dayEndHourForGridView:) func dayEndHour(for gridView: SCKGridView) -> Int
-
-    /// Implemented by a grid-style schedule view's delegate to provide an array
-    /// of unavailable time ranges that are drawn as so by the view.
-    /// - Parameter gridView: The schedule view asking for the values.
-    /// - Returns: The array of unavailable time ranges (may be empty).
-    @objc(unavailableTimeRangesForGridView:)
-    optional func unavailableTimeRanges(for gridView: SCKGridView) -> [SCKUnavailableTimeRange]
-}
-
 /// An abstract `SCKView` subclass that implements the common functionality of any
 /// grid-style schedule view, such as the built in day view and week view. This 
 /// class provides conflict management, interaction with the displayed days and 
@@ -56,36 +33,65 @@ import Cocoa
 ///
 /// It also manages a series of day, month, hour and hour fraction labels, which 
 /// are automatically updated and laid out by this class.
+///
 /// - Note: Do not instantiate this class directly.
-public class SCKGridView: SCKView {
+///
+open class SCKGridView: SCKView {
+//
 
-    struct Constants {
-        static let DayAreaHeight: CGFloat = 40.0
-        static let DayAreaMarginBottom: CGFloat = 20.0
-        static let MaxHeightPerHour: CGFloat = 300.0
-        static let HourAreaWidth: CGFloat = 56.0
-        static var paddingTop: CGFloat { return DayAreaHeight + DayAreaMarginBottom }
+
+    var Constants: SCKLayoutConstants {
+        guard let validLayoutDelegate = self.layoutManagingDelegate else {
+            return SCKLayoutConstants(DayAreaHeight: 40.0, DayAreaMarginBottom: 40.0, MaxHeightPerHour: 300.0, HourAreaWidth: 56.0)
+        }
+        return validLayoutDelegate.layoutConstants
     }
+
+
+    public var unavailableTimeRangesColor: NSColor { return self.colorManagingDelegate?.unavailableTimeRangesColor ?? NSColor(red: 0.925, green: 0.942, blue: 0.953, alpha: 1.0) }
+    public var dayDelimetersColor: NSColor { return self.colorManagingDelegate?.dayDelimetersColor ?? NSColor(deviceWhite: 0.95, alpha: 1.0) }
+    public var hourDelimetersColor: NSColor { return self.colorManagingDelegate?.hourDelimetersColor ?? NSColor(deviceWhite: 0.95, alpha: 1.0) }
+    public var currentTimeLineColor: NSColor { return self.colorManagingDelegate?.currentTimeLineColor ?? NSColor.red }
+
 
     override func setUp() {
         super.setUp()
         updateHourParameters()
     }
 
-    override public weak var delegate: SCKViewDelegate? {
+    override open weak var delegate: SCKViewDelegate? {
         didSet {
             readDefaultsFromDelegate()
         }
     }
 
+    override open weak var colorManagingDelegate: SCKColorManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
+    override open weak var labelManagingDelegate: SCKLabelManaging? {
+        didSet {
+            self.setUp()
+            self.resetLabels(andConfigure: true)
+        }
+    }
+
+    override open weak var layoutManagingDelegate: SCKLayoutManaging? {
+        didSet {
+            self.setUp()
+        }
+    }
+
     // MARK: - Date handling additions
 
-    public override var dateInterval: DateInterval {
+    open override var dateInterval: DateInterval {
         didSet { // Set up day count and day labels
-            let sDate = dateInterval.start
-            let eDate = dateInterval.end.addingTimeInterval(1)
-            dayCount = sharedCalendar.dateComponents([.day], from: sDate, to: eDate).day!
-            dayLabelingView.configure(dayCount: dayCount, startDate: sDate)
+            let sD = dateInterval.start
+            let eD = dateInterval.end.addingTimeInterval(1)
+            self.dayCount = sharedCalendar.dateComponents([.day], from: sD, to: eD).day!
+            configureDayLabels()
             _ = self.minuteTimer
         }
     }
@@ -99,12 +105,14 @@ public class SCKGridView: SCKView {
     /// A view representign the day end hour.
     private var dayEndPoint = SCKDayPoint(hour: 24, minute: 0, second: 0)
 
-    /// Called when the `dayStartPoint` and `dayEndPoint` change during  initialisation
-    /// or when their values are read from the delegate. Sets the `firstHour` and
-    /// `hourCount` properties and ensures a minimum height per hour to fill the view.
+    /// Called when the `dayStartPoint` and `dayEndPoint` change during
+    /// initialisation or when their values are read from the delegate. Sets the
+    /// `firstHour` and `hourCount` properties and ensures a minimum height per hour
+    /// to fill the view.
     private func updateHourParameters() {
         firstHour = dayStartPoint.hour
         hourCount = dayEndPoint.hour - dayStartPoint.hour
+        //TODO: Doesn't this contentRect.height need to be reduced by the margin sizes? Is this responsible for the layout bug?
         let minHourHeight = contentRect.height / CGFloat(hourCount)
         if hourHeight < minHourHeight {
             hourHeight = minHourHeight
@@ -113,16 +121,16 @@ public class SCKGridView: SCKView {
 
     /// The first hour of the day displayed.
     internal var firstHour: Int = 0 {
-        didSet { hourLabelingView.configureHourLabels(firstHour: firstHour, hourCount: hourCount) }
+        didSet { configureHourLabels() }
     }
 
     /// The total number of hours displayed.
     internal var hourCount: Int = 1 {
-        didSet { hourLabelingView.configureHourLabels(firstHour: firstHour, hourCount: hourCount) }
+        didSet { configureHourLabels() }
     }
 
-    /// The height for each hour row. Setting this value updates the saved one in
-    /// UserDefaults and updates hour labels visibility.
+    /// The height for each hour row. Setting this value updated the saved one in
+    /// UserDefaults and updates hour labels visibility. 
     internal var hourHeight: CGFloat = 0.0 {
         didSet {
             if hourHeight != oldValue && superview != nil {
@@ -130,167 +138,587 @@ public class SCKGridView: SCKView {
                 UserDefaults.standard.set(hourHeight, forKey: key)
                 invalidateIntrinsicContentSize()
             }
-            hourLabelingView.updateHourLabelsVisibility(hourHeight: hourHeight,
-                                                        eventViewBeingDragged: eventViewBeingDragged)
+            updateHourLabelsVisibility()
         }
     }
 
+    // MARK: - Day and hour labels
+
+    private func label(_ text: String, size: CGFloat, color: NSColor) -> NSTextField {
+        let label = NSTextField(frame: .zero)
+        label.isBordered = false; label.isEditable = false; label.isBezeled = false; label.drawsBackground = false
+        label.stringValue = text
+        label.font = .systemFont(ofSize: size)
+        label.textColor = color
+        label.setAccessibilityIdentifier("SCKDayOrHourLabel")
+        label.sizeToFit() // Needed
+        return label
+    }
+
+    func resetHourLabels(andConfigure shouldConfigure: Bool) {
+        // Remove all hour and minute labels
+        for (hour, label) in self.hourLabels {
+            let shouldBeInstalled = false
+            if label.superview != nil && !shouldBeInstalled {
+                label.removeFromSuperview()
+                for min in [10, 15, 20, 30, 40, 45, 50] {
+                    hourLabels[min*10+hour]?.removeFromSuperview()
+                }
+            }
+        }
+        self.hourLabels.removeAll(keepingCapacity: true)
+        if (shouldConfigure) {
+            self.configureHourLabels()
+        }
+    }
+
+    func resetDayLabels(andConfigure shouldConfigure: Bool) {
+        //Remove all Day and Month labels
+        for (day, dayLabel) in dayLabels.enumerated() {
+            if dayLabel.superview != nil {
+                dayLabel.removeFromSuperview()
+                self.monthLabels[day].removeFromSuperview()
+            }
+        }
+        self.dayLabels.removeAll(keepingCapacity: true)
+        self.monthLabels.removeAll(keepingCapacity: true)
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let finalShouldConfigure: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            finalShouldConfigure = (shouldConfigure && (!validLabelDelegate.shouldDisableDayHeaderLabels))
+        }
+        else {
+            finalShouldConfigure = shouldConfigure
+        }
+
+        if (finalShouldConfigure) {
+            self.configureDayLabels()
+        }
+    }
+
+    func resetLabels(andConfigure shouldConfigure: Bool) {
+        self.resetDayLabels(andConfigure: shouldConfigure)
+        self.resetHourLabels(andConfigure: shouldConfigure)
+    }
+
+
+
+
     // MARK: Day and month labels
 
-    /// A container view for day labels. Pinned at the top of the scroll view.
-    private let dayLabelingView = SCKDayLabelingView(frame: CGRect(x: 0, y: 0, width: 0, height: Constants.DayAreaHeight))
+    /// An array containing all generated day labels.
+    private var dayLabels: [NSTextField] = []
 
-    /// A container view for hour labels. Pinned left in the scroll view.
-    private let hourLabelingView = SCKHourLabelingView(frame: .zero)
+    /// An array containing all generated month labels.
+    private var monthLabels: [NSTextField] = []
+
+    /// A container view for day labels. Pinned at the top of the scroll view.
+    private let dayLabelingView = NSView(frame: .zero)
+
+    // The rectangles that wrap all the events in the day
+    private var dayColumnRectangles: [CGRect] = []
+
+
+    public func getDayLabelingView() -> NSView {
+        return self.dayLabelingView
+    }
+
+    public func getTopLabels() -> (day: [NSTextField], month: [NSTextField]) {
+        return (self.dayLabels, self.monthLabels)
+    }
+
+    public func getGridColumnRectangles() -> [CGRect] {
+        return self.dayColumnRectangles
+    }
+
+
+
+    /// A date formatter for day labels.
+    private var dayLabelsDateFormatter: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "EEEE d"; return f
+    }()
+
+    /// A date formatter for month labels.
+    private var monthLabelsDateFormatter: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "MMMM"; return f
+    }()
+
+    /// Generates all the day and month labels for the displayed day range
+    /// which have not been generated yet and installs them as subviews of this
+    /// view, while also removing the unneeded ones from its superview. This
+    /// method also updates the label's string value to match the displayed date
+    /// interval. Eventually marks the view as needing layout. This method is 
+    /// called whenever the day interval property changes.
+    private func configureDayLabels() {
+
+        // Determine if the day/month labels should be reconfigured (reinitialized and added to the views) based on the passed in parameter and whether the labelManagingDelegate says we should display them.
+        let labelsAreEnabled: Bool
+        if let validLabelDelegate = self.labelManagingDelegate {
+            labelsAreEnabled = (!validLabelDelegate.shouldDisableDayHeaderLabels)
+        }
+        else {
+            labelsAreEnabled = true
+        }
+
+        // If labels are not enabled, we reset them (removing them from the views and deallocating them) without configuring them (as not to recreate them)
+        if (!labelsAreEnabled) {
+            self.resetDayLabels(andConfigure: false)
+            needsLayout = true
+            return
+        }
+
+        // 1. Generate missing labels
+        for day in 0..<dayCount {
+            if dayLabels.count > day { // Skip already created labels
+                continue
+            }
+            let dayLabel: NSTextField
+            let monthLabel: NSTextField
+
+            if let validLabelDelegate = self.labelManagingDelegate {
+                dayLabel = validLabelDelegate.getLabel(forLabelType: .day(date: nil))
+                monthLabel = validLabelDelegate.getLabel(forLabelType: .month(date: nil))
+            }
+            else {
+                dayLabel = label("", size: 14.0, color: .darkGray)
+                monthLabel = label("", size: 12.0, color: .lightGray)
+            }
+            monthLabel.isHidden = true
+            dayLabels.append(dayLabel)
+            monthLabels.append(monthLabel)
+        }
+
+        // 2. Add visible days' labels as subviews. Remove others if installed.
+        // In addition, change label string values to the correct ones.
+        for (day, dayLabel) in dayLabels.enumerated() {
+            if dayLabel.superview != nil && day >= dayCount {
+                dayLabel.removeFromSuperview()
+                monthLabels[day].removeFromSuperview()
+            } else if day < dayCount {
+                if dayLabel.superview == nil {
+                    self.dayLabelingView.addSubview(dayLabel)
+                    self.dayLabelingView.addSubview(monthLabels[day])
+                }
+                let date = sharedCalendar.date(byAdding: .day, value: day, to: dateInterval.start)!
+                let text: String
+                if let validLabelDelegate = self.labelManagingDelegate {
+                    text = validLabelDelegate.getLabelText(forLabelType: .day(date: date))
+                }
+                else {
+                    text = dayLabelsDateFormatter.string(from: date).uppercased()
+                }
+                dayLabel.stringValue = text
+                dayLabel.sizeToFit()
+
+                // Show month label if first day in week or first day in month.
+                if day == 0 || sharedCalendar.component(.day, from: date) == 1 {
+                    let monthText: String
+                    if let validLabelDelegate = self.labelManagingDelegate {
+                        monthText = validLabelDelegate.getLabelText(forLabelType: .month(date: date))
+                    }
+                    else {
+                        monthText = monthLabelsDateFormatter.string(from: date)
+                    }
+                    monthLabels[day].stringValue = monthText
+                    monthLabels[day].sizeToFit()
+                    monthLabels[day].isHidden = false
+                } else {
+                    monthLabels[day].isHidden = true
+                }
+            }
+        }
+        // 3. Set needs layout
+        needsLayout = true
+    }
+
+    // MARK: Hour labels
+
+    /// A dictionary containing all generated hour labels stored using the hour
+    /// as the key for n:00 labels and the hour plus 100*m for n:m labels.
+    private var hourLabels: [Int: NSTextField] = [:]
+
+    /// Generates all the hour and minute labels for the displayed hour range which have not been generated yet and
+    /// installs them as subviews of this view, while also removing the unneeded ones from its superview. Eventually
+    /// marks the view as needing layout. This method is called when the first hour or the hour count properties change.
+    private func configureHourLabels() {
+        // 1. Generate missing hour labels
+        for hourIdx in 0..<hourCount {
+            let hour = firstHour + hourIdx
+            if hourLabels[hour] != nil {
+                continue
+            }
+            let hourLabel: NSTextField
+            if let validLabelDelegate = self.labelManagingDelegate {
+                hourLabel = validLabelDelegate.getLabel(forLabelType: .hour(hourValue: hour))
+            }
+            else {
+                hourLabel = label("\(hour):00", size: 11, color: .darkGray)
+            }
+            hourLabels[hour] = hourLabel
+            for min in [10, 15, 20, 30, 40, 45, 50] {
+                let mLabel: NSTextField
+                if let validLabelDelegate = self.labelManagingDelegate {
+                    mLabel = validLabelDelegate.getLabel(forLabelType: .min(hourValue: hour, minValue: min))
+                }
+                else {
+                    mLabel = label("\(hour):\(min)  -", size: 10, color: .lightGray)
+                }
+                mLabel.isHidden = true
+                hourLabels[hour+min*10] = mLabel
+            }
+        }
+
+        // 2. Add visible hours' labels as subviews. Remove others if installed.
+        for (hour, label) in hourLabels {
+            guard hour < 100 else {continue}
+            let shouldBeInstalled = (hour >= firstHour && hour < firstHour + hourCount)
+            if label.superview != nil && !shouldBeInstalled {
+                label.removeFromSuperview()
+                for min in [10, 15, 20, 30, 40, 45, 50] {
+                    hourLabels[min*10+hour]?.removeFromSuperview()
+                }
+            } else if label.superview == nil && shouldBeInstalled {
+                addSubview(label)
+                for min in [10, 15, 20, 30, 40, 45, 50] {
+                    guard let mLabel = hourLabels[min*10+hour] else {
+                        Swift.print("Warning: An hour label was missing")
+                        continue
+                    }
+                    addSubview(mLabel)
+                }
+            }
+        }
+
+        // 3. Set needs layout
+        needsLayout = true
+    }
+
+    /// Shows or hides the half hour, quarter hour and 10-minute hour labels 
+    /// according to the hour height property. This method is called whenever the
+    /// mentioned property changes.
+    private func updateHourLabelsVisibility() {
+        for (key, value) in hourLabels {
+            guard eventViewBeingDragged == nil else {
+                value.isHidden = true
+                continue
+            }
+            switch key {
+            case 300..<324:                                  value.isHidden = (hourHeight < 40.0)
+            case 150..<174, 450..<474:                       value.isHidden = (hourHeight < 80.0 || hourHeight >= 120)
+            case 100..<124, 200..<224, 400..<424, 500..<524: value.isHidden = (hourHeight < 120.0)
+            default:                                         value.isHidden = false
+            }
+        }
+    }
 
     // MARK: - Date transform additions
 
-    override func relativeTimeLocation(for point: CGPoint) -> Double {
+    // Converts between a DateInterval relative time location and a day relative time location
+    public final func convertToDayRelative(totalRelativeTimeLocation: SCKRelativeTimeLocation) -> (dayIndex: Int, dayRelative: SCKRelativeTimeLocation)? {
+        if (totalRelativeTimeLocation == SCKRelativeTimeLocationInvalid) { return nil }
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay: Double = 1.0 / Double(self.dayCount)
+        let totalMinutesPerDay: Double = 60.0 * Double(self.hourCount)
+        // day: The integer day index to which the point belongs
+        let day: Int = Int(trunc(totalRelativeTimeLocation/offsetPerDay))
+        // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
+        let dayStartOffset: Double = offsetPerDay * Double(day)
+
+        let remainder: Double = totalRelativeTimeLocation - dayStartOffset
+        // inverseResult is in seconds
+        let inverseResult: Double = (self.dateInterval.duration * remainder)
+        let inverseResultMinutes: Double = inverseResult * Double(60.0)
+        let result: SCKRelativeTimeLocation = (inverseResultMinutes / totalMinutesPerDay)
+        return (day, result)
+    }
+
+
+
+
+//    public final func calculateDayRelativeTimeLocation(for date: Date) -> SCKRelativeTimeLocation {
+//        guard dateInterval.contains(date) else { return SCKRelativeTimeLocationInvalid; }
+//        let dateRef = date.timeIntervalSinceReferenceDate
+//        let startDateRef = dateInterval.start.timeIntervalSinceReferenceDate
+//        return (dateRef - startDateRef) / dateInterval.duration
+//    }
+
+
+    // Given any point within the rectangle, determines the time it should occur on.
+    override open func relativeTimeLocation(for point: CGPoint) -> Double {
         if contentRect.contains(point) {
+            // dayWidth: The screen width of each day
             let dayWidth: CGFloat = contentRect.width / CGFloat(dayCount)
+            // offsetPerDay: Gives the relative offset at the start of each day.
             let offsetPerDay = 1.0 / Double(dayCount)
+            // day: The integer day index to which the point belongs
             let day = Int(trunc((point.x-contentRect.minX)/dayWidth))
+            // dayOffset: the accumulated relative offset for the start of the day to which the point belongs
             let dayOffset = offsetPerDay * Double(day)
+
+            // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+            // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
             let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+            // offsetPerHour: Gives the relative offset (length) for each hour.
             let offsetPerHour = 60.0 * offsetPerMin
-            let totalMinutes = 60.0 * CGFloat(hourCount)
-            let minute = totalMinutes * (point.y - contentRect.minY) / contentRect.height
+            let totalMinutesPerDay = 60.0 * CGFloat(hourCount)
+            let minute = totalMinutesPerDay * (point.y - contentRect.minY) / contentRect.height
             let minuteOffset = offsetPerMin * Double(minute)
-            return dayOffset + offsetPerHour * Double(firstHour) + minuteOffset
+            return dayOffset + (offsetPerHour * Double(firstHour)) + minuteOffset
         }
         return SCKRelativeTimeLocationInvalid
+    }
+
+
+    open func relativeScreenHeight(forAbsoluteNumberMinutes absoluteMin: Double) -> CGFloat? {
+        let canvas = contentRect
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        if (dayTotalMinutes <= 0.0) { return nil }
+        let m: Double = (absoluteMin / dayTotalMinutes)
+        let relScreenHeight: Double = m
+        let absoluteScreenHeight: CGFloat = canvas.height * CGFloat(relScreenHeight)
+//        let absoluteOffset: CGFloat = canvas.minY + absoluteScreenHeight
+        return absoluteScreenHeight
+    }
+
+
+
+
+//    open func relativeScreenHeight(for offset: SCKRelativeTimeLength) -> CGFloat {
+//        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+//        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+//        return (offsetPerMin * offset)
+//    }
+
+
+    override open func relativeTimeLength(for height: CGFloat) -> SCKRelativeTimeLength {
+        let canvas = contentRect
+        if (canvas.height < height) { return SCKRelativeTimeLengthInvalid }
+        // percentHeight: maps on to a scale of 0.0 - 1.0 for the day
+        let percentHeight: Double = Double(height) / Double(canvas.height)
+        // Now just convert from day relative to duration relative
+        let dayTotalHours: Double = Double(self.hourCount)
+        let dayTotalMinutes: Double = (dayTotalHours * 60.0)
+        let dayTotalSeconds: Double = (dayTotalMinutes * 60.0)
+        if (dayTotalSeconds <= 0.0) { return SCKRelativeTimeLengthInvalid }
+
+        // offsetPerDay: Gives the relative offset at the start of each day.
+        let offsetPerDay = 1.0 / Double(dayCount)
+        let dateIntervalTotalSeconds = dateInterval.duration
+        let result: SCKRelativeTimeLength = (percentHeight * (dayTotalSeconds / dateIntervalTotalSeconds))
+        // offsetPerDay: Gives the relative offset (length) for each minute. Note this could be calculated anywhere on the dateInterval and would be the same.
+        // Note: addingTimeInterval(60) specifies the 60 seconds in a minute.
+//        let offsetPerMin = calculateRelativeTimeLocation(for: dateInterval.start.addingTimeInterval(60))
+        return result
     }
 
     /// Returns the Y-axis position in the view's coordinate system that represents a particular hour and
     /// minute combination.
     /// - Parameters:
     ///   - hour: The hour.
-    ///   - minute: The minute.
+    ///   - m: The minute.
     /// - Returns: The calculated Y position.
-    internal func yFor(hour: Int, minute: Int) -> CGFloat {
+    open func yFor(hour: Int, minute: Int) -> CGFloat {
         let canvas = contentRect
         let hours = CGFloat(hourCount)
-        let hourIndex = CGFloat(hour - firstHour)
-        return canvas.minY + canvas.height * (hourIndex + CGFloat(minute)/60.0) / hours
+        let h = CGFloat(hour - firstHour)
+        return canvas.minY + canvas.height * (h + CGFloat(minute)/60.0) / hours
     }
 
     // MARK: - Event Layout overrides
 
-    override public var contentRect: CGRect {
+    override open var contentRect: CGRect {
         // Exclude day and hour labeling areas.
         return CGRect(x: Constants.HourAreaWidth, y: Constants.paddingTop,
-                      width: frame.width - Constants.HourAreaWidth,
-                      height: CGFloat(hourCount) * hourHeight)
+                      width: frame.width - Constants.HourAreaWidth, height: frame.height - Constants.paddingTop)
     }
 
-    override func invalidateLayout(for eventView: SCKEventView) {
-        // Overriden to manage event conflicts. No need to call super in this case.
-        let conflicts = controller.resolvedConflicts(for: eventView.eventHolder)
+    override open func invalidateLayout(for eventView: SCKEventView) {
+        // Overriden to manage event conflicts. No need to call super in this case because it does nothing.
+        // Gets the conflicts (overlapping events) for this specific eventView
+        let conflicts: [SCKEventHolder] = controller.resolvedConflicts(for: eventView.eventHolder)
         if !conflicts.isEmpty {
             eventView.eventHolder.conflictCount = conflicts.count
         } else {
             eventView.eventHolder.conflictCount = 1 //FIXME: Should not get here.
             NSLog("Unexpected behavior")
         }
-        eventView.eventHolder.conflictIndex = conflicts.firstIndex(where: { $0 === eventView.eventHolder }) ?? 0
+        eventView.eventHolder.conflictIndex = conflicts.index(where: { $0 === eventView.eventHolder }) ?? 0
     }
 
-    override func prepareForDragging() {
-        hourLabelingView.updateHourLabelsVisibility(hourHeight: hourHeight,
-                                                    eventViewBeingDragged: eventViewBeingDragged)
+    override open func prepareForDragging() {
+        updateHourLabelsVisibility()
         super.prepareForDragging()
     }
 
-    override func restoreAfterDragging() {
-        hourLabelingView.updateHourLabelsVisibility(hourHeight: hourHeight,
-                                                    eventViewBeingDragged: eventViewBeingDragged)
+    override open func restoreAfterDragging() {
+        updateHourLabelsVisibility()
         super.restoreAfterDragging()
     }
 
     // MARK: - NSView overrides
 
-    public override var intrinsicContentSize: NSSize {
+    open override var intrinsicContentSize: NSSize {
         return CGSize(width: NSView.noIntrinsicMetric, height: CGFloat(hourCount) * hourHeight + Constants.paddingTop)
     }
 
-    public override func removeFromSuperview() {
-        dayLabelingView.removeFromSuperview()
-        super.removeFromSuperview()
+    public var dayLabelsRect: CGRect? {
+        let canvas = contentRect
+        guard dayCount > 0 else { return nil } // View is not ready
+        let marginLeft = self.Constants.paddingLeft
+        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
+        return dayLabelsRect
     }
 
-    public override func updateConstraints() {
-        let marginLeft = Constants.HourAreaWidth
-        let dayLabelsRect = CGRect(x: marginLeft, y: 0, width: frame.width-marginLeft, height: Constants.DayAreaHeight)
-        let dayWidth = dayLabelsRect.width / CGFloat(dayCount)
+    public var dayWidth: CGFloat? {
+        guard let validDayLabelsRect = self.dayLabelsRect else { return nil }
+        let dayWidth = validDayLabelsRect.width / CGFloat(dayCount)
+        return dayWidth
+    }
+
+
+    //MARK: -
+    //MARK: - layout()
+    open override func layout() {
+        super.layout();
+        let canvas: CGRect = contentRect
+        guard dayCount > 0 else { return } // View is not ready
+
+        let marginLeft: CGFloat = self.Constants.paddingLeft
+        let dayLabelsRect: CGRect = self.dayLabelsRect!
+        let dayWidth: CGFloat = self.dayWidth!
+
+        // Layout day labels
+        self.layoutDayLabels(canvas: canvas, marginLeft: marginLeft, dayWidth: dayWidth)
+
+        // Layout hour labels
+        self.layoutHourLabels(canvas: canvas, marginLeft: marginLeft)
 
         // Layout events
-        let offsetPerDay = 1.0/Double(dayCount)
+        let offsetPerDay: Double = 1.0/Double(self.dayCount)
+        self.layoutEvents(canvas: canvas, dayWidth: dayWidth, offsetPerDay: offsetPerDay)
+    }
+
+    //MARK: -
+    //MARK: - layoutDayLabels(...)
+    // called only by layout()
+    open func layoutDayLabels(canvas: CGRect, marginLeft: CGFloat, dayWidth: CGFloat) {
+        self.dayColumnRectangles.removeAll(keepingCapacity: true)
+
+        for day in 0..<dayCount {
+            let minX = marginLeft + (CGFloat(day) * dayWidth);
+            let midY = Constants.DayAreaHeight/2.0
+            // Add the day label rect
+            self.dayColumnRectangles.append(CGRect.init(x: minX, y: Constants.paddingTop, width: dayWidth, height: canvas.height))
+
+            // Set up the day/month labels if enabled, otherwise just continue to the next day
+            if let validLabelDelegate = self.labelManagingDelegate {
+                if (validLabelDelegate.shouldDisableDayHeaderLabels) {
+                    continue; // continue without messing around with the day or month labels (as they don't exist)
+                }
+            }
+            let dLabel = dayLabels[day]
+            let o = CGPoint(x: minX + dayWidth/2.0 - dLabel.frame.width/2.0, y: midY - dLabel.frame.height/2.0)
+            var r = CGRect(origin: o, size: dLabel.frame.size)
+            if day == 0 || (Int(dLabel.stringValue.components(separatedBy: " ")[1]) == 1) {
+                r.origin.y += 8.0
+                let mLabel = monthLabels[day]
+                let mOrigin = CGPoint(x: minX + dayWidth/2 - mLabel.frame.width/2, y: midY - mLabel.frame.height/2 - 7)
+                mLabel.frame = CGRect(origin: mOrigin, size: mLabel.frame.size)
+            }
+            dLabel.frame = r
+        }
+    }
+
+    //MARK: -
+    //MARK: - layoutHourLabels(...)
+    // called only by layout()
+    open func layoutHourLabels(canvas: CGRect, marginLeft: CGFloat) {
+        for (i, label) in self.hourLabels {
+            let size = label.frame.size
+            switch i {
+            case 0..<24: // Hour label
+                let o = CGPoint(x: marginLeft - size.width - 8, y: canvas.minY + CGFloat(i-firstHour) * hourHeight - 7)
+                label.frame = CGRect(origin: o, size: size)
+            default: // Get the hour and the minute
+                var hour = i; while hour >= 50 { hour -= 50 }
+                let hourOffset = canvas.minY + CGFloat(hour - firstHour) * hourHeight
+                let o = CGPoint(x: marginLeft-size.width + 4, y: hourOffset+hourHeight * CGFloat((i-hour)/10)/60.0 - 7)
+                label.frame = CGRect(origin: o, size: size)
+            }
+        }
+    }
+
+    //MARK: -
+    //MARK: - layoutEvents(...)
+    // called only by layout()
+    open func layoutEvents(canvas: CGRect, dayWidth: CGFloat, offsetPerDay: Double) {
         for eventView in subviews.compactMap({ $0 as? SCKEventView }) where eventView.eventHolder.isReady {
             let holder = eventView.eventHolder!
             let day = Int(trunc(holder.relativeStart/offsetPerDay))
             let sPoint = SCKDayPoint(date: holder.cachedScheduledDate)
             let eMinute = sPoint.minute + holder.cachedDuration
             let ePoint = SCKDayPoint(hour: sPoint.hour, minute: eMinute, second: sPoint.second)
-            let top = yFor(hour: sPoint.hour, minute: sPoint.minute)
-            eventView.topConstraint.constant = top
-            eventView.heightConstraint.constant = yFor(hour: ePoint.hour, minute: ePoint.minute)-top
-            let width = dayWidth / CGFloat(eventView.eventHolder.conflictCount)
-            eventView.widthConstraint.constant = width
-            eventView.leadingConstraint.constant = Constants.HourAreaWidth + CGFloat(day) * dayWidth + width * CGFloat(holder.conflictIndex)
-            NSLayoutConstraint.activate([
-                eventView.topConstraint, eventView.leadingConstraint,
-                eventView.widthConstraint, eventView.heightConstraint
-            ])
+            var newFrame = CGRect.zero
+            newFrame.origin.y = yFor(hour: sPoint.hour, minute: sPoint.minute)
+            newFrame.size.height = yFor(hour: ePoint.hour, minute: ePoint.minute)-newFrame.minY
+            newFrame.size.width = dayWidth / CGFloat(eventView.eventHolder.conflictCount)
+            // Divide the space allocated for conflicted events up evenly amongst all the events.
+            newFrame.origin.x = canvas.minX + CGFloat(day) * dayWidth + newFrame.width * CGFloat(holder.conflictIndex)
+            eventView.frame |= newFrame
         }
-        super.updateConstraints()
     }
 
-    public override func resize(withOldSuperviewSize oldSize: NSSize) {
+
+
+
+
+
+
+
+    open override func resize(withOldSuperviewSize oldSize: NSSize) {
         super.resize(withOldSuperviewSize: oldSize) // Triggers layout. Try to acommodate hour height.
-        let visibleHeight = superview!.frame.height - Constants.paddingTop
+        let visibleHeight = superview!.frame.height - (Constants.paddingTop + Constants.paddingBottom)
         let contentHeight = CGFloat(hourCount) * hourHeight
         if contentHeight < visibleHeight && hourCount > 0 {
             hourHeight = visibleHeight / CGFloat(hourCount)
         }
-        dayLabelingView.needsUpdateConstraints = true
-        hourLabelingView.needsUpdateConstraints = true
-        needsUpdateConstraints = true
     }
 
-    public override func viewWillMove(toSuperview newSuperview: NSView?) {
+    open override func viewWillMove(toSuperview newSuperview: NSView?) {
         // Insert day labeling view
         guard let superview = newSuperview else { return }
         let height = Constants.DayAreaHeight
-        if let parent = superview.superview?.superview {
+        if let parent = newSuperview?.superview?.superview {
             dayLabelingView.translatesAutoresizingMaskIntoConstraints = false
-            parent.addSubview(dayLabelingView, positioned: .above, relativeTo: nil)
+            //parent.addSubview(dayLabelingView, positioned: .above, relativeTo: nil)
+            parent.addSubview(dayLabelingView, positioned: .above, relativeTo: self)
+
+            if let validColorDelegate = self.colorManagingDelegate {
+                dayLabelingView.layer?.backgroundColor = validColorDelegate.dayLabelingViewBackgroundColor.cgColor
+            }
+            else {
+                dayLabelingView.layer?.backgroundColor = NSColor.white.cgColor
+            }
+
+            dayLabelingView.layer?.opacity = 0.95
             NSLayoutConstraint.activate([
-                dayLabelingView.leftAnchor.constraint(equalTo: parent.leftAnchor, constant: Constants.HourAreaWidth),
+                dayLabelingView.leftAnchor.constraint(equalTo: parent.leftAnchor),
                 dayLabelingView.rightAnchor.constraint(equalTo: parent.rightAnchor),
                 dayLabelingView.topAnchor.constraint(equalTo: parent.topAnchor),
                 dayLabelingView.heightAnchor.constraint(equalToConstant: height)
             ])
-            hourLabelingView.translatesAutoresizingMaskIntoConstraints = false
-            hourLabelingView.paddingTop = Constants.DayAreaMarginBottom
-            addSubview(hourLabelingView, positioned: .above, relativeTo: nil)
-            NSLayoutConstraint.activate([
-                hourLabelingView.leftAnchor.constraint(equalTo: leftAnchor),
-                hourLabelingView.widthAnchor.constraint(equalToConstant: Constants.HourAreaWidth),
-                hourLabelingView.topAnchor.constraint(equalTo: topAnchor, constant: Constants.DayAreaHeight)
-            ])
         }
-        DispatchQueue.main.asyncAfter(deadline: .now()) { [weak self] in
-            self?.dayLabelingView.needsUpdateConstraints = true
-        }
-    }
 
-    public override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        guard superview != nil else { return } // Called when removed
         // Restore zoom if possible
         let zoomKey = SCKGridView.defaultsZoomKeyPrefix + ".\(String(describing: type(of: self)))"
-        let hHeight = CGFloat(UserDefaults.standard.double(forKey: zoomKey))
-        processNewHourHeight(hHeight)
+        hourHeight = CGFloat(UserDefaults.standard.double(forKey: zoomKey))
+        let minHourHeight = (superview.frame.height-Constants.paddingTop)/CGFloat(hourCount)
+        if hourHeight < minHourHeight || hourHeight > 1000.0 {
+            hourHeight = minHourHeight
+        }
     }
 
     // MARK: - Delegate defaults
@@ -308,6 +736,17 @@ public class SCKGridView: SCKView {
         let start = delegate.dayStartHour(for: self)
         var end = delegate.dayEndHour(for: self)
         if end == 0 { end = 24 }
+
+        if let layoutDelegate = self.layoutManagingDelegate {
+
+        }
+        if let labelDelegate = self.labelManagingDelegate {
+
+        }
+        if let colorDelegate = self.colorManagingDelegate {
+
+        }
+
         dayStartPoint = SCKDayPoint(hour: start, minute: 0, second: 0)
         dayEndPoint = SCKDayPoint(hour: end, minute: 0, second: 0)
         updateHourParameters()
@@ -350,14 +789,66 @@ public class SCKGridView: SCKView {
         return .zero
     }
 
+    // For any given date in the dateInterval, returns origin of an event scheduled at the interval
+    public func getCanvasRectForEvent(_ event: SCKEvent) -> CGRect? {
+        // Try to find the event view
+        guard let foundIndex = self.subviews.index(where: { (($0 as? SCKEventView)!.eventHolder.representedObject == event) }) else {
+            return nil
+        }
+        guard let eventView: SCKEventView = self.subviews[foundIndex] as? SCKEventView else {
+            return nil
+        }
+        return eventView.frame
+    }
+
+
+    // For any given event object, returns the corresponding view if it exists.
+    public func getEventViewForEvent(_ event: SCKEvent) -> SCKEventView? {
+        // Try to find the event view
+        guard let foundIndex = self.subviews.index(where: { (($0 as? SCKEventView)!.eventHolder.representedObject == event) }) else {
+            return nil
+        }
+        guard let eventView: SCKEventView = self.subviews[foundIndex] as? SCKEventView else {
+            return nil
+        }
+        return eventView
+    }
+
+
+
+
+
+
+    // For any given date in the dateInterval, returns origin of an event scheduled at the interval
+    public func getCanvasPositionForDate(_ date: Date) -> CGPoint {
+        let canvas = contentRect
+        let dayWidth: CGFloat = canvas.width / CGFloat(dayCount)
+        let offsetPerDay = 1.0/Double(dayCount)
+        /// The relative start time of the event in the `scheduleView` date bounds.
+        let relativeStart = self.calculateRelativeTimeLocation(for: date)
+        let day = Int(trunc(relativeStart/offsetPerDay))
+        let sPoint = SCKDayPoint(date: date)
+        let eMinute = sPoint.minute
+        let ePoint = SCKDayPoint(hour: sPoint.hour, minute: eMinute, second: sPoint.second)
+        var newOrigin: CGPoint = CGPoint.zero
+        newOrigin.y = yFor(hour: sPoint.hour, minute: sPoint.minute)
+        newOrigin.x = canvas.minX + CGFloat(day) * dayWidth
+        return newOrigin
+    }
+
+
+
+
+
+
     // MARK: - Minute timer
 
     /// A timer that fires every minute to mark the view as needing display in order to update the "now" line.
     private lazy var minuteTimer: Timer = {
         let sel = #selector(SCKGridView.minuteTimerFired(timer:))
-        let tmr = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: sel, userInfo: nil, repeats: true)
-        tmr.tolerance = 50.0
-        return tmr
+        let t = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: sel, userInfo: nil, repeats: true)
+        t.tolerance = 50.0
+        return t
     }()
 
     @objc dynamic func minuteTimerFired(timer: Timer) {
@@ -366,7 +857,7 @@ public class SCKGridView: SCKView {
 
     // MARK: - Drawing
 
-    public override func draw(_ dirtyRect: NSRect) {
+    open override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         guard hourCount > 0 else { return }
         drawUnavailableTimeRanges()
@@ -376,64 +867,68 @@ public class SCKGridView: SCKView {
         drawDraggingGuidesIfNeeded()
     }
 
-    private func drawUnavailableTimeRanges() {
-        NSColor.windowBackgroundColor.set()
+    open func drawUnavailableTimeRanges() {
+        self.unavailableTimeRangesColor.set()
         unavailableTimeRanges.forEach { rectForUnavailableTimeRange($0).fill() }
     }
 
-    private func drawDayDelimiters() {
-        let canvas = CGRect(x: Constants.HourAreaWidth, y: Constants.DayAreaHeight,
-                            width: frame.width-Constants.HourAreaWidth, height: frame.height-Constants.DayAreaHeight)
+    open func drawDayDelimiters() {
+        let canvas = CGRect(x: Constants.HourAreaWidth, y: Constants.DayAreaHeight, width: frame.width-Constants.HourAreaWidth, height: frame.height-Constants.DayAreaHeight)
         let dayWidth = canvas.width / CGFloat(dayCount)
-        NSColor.gridColor.set()
+        self.dayDelimetersColor.set()
+        //NSColor(deviceWhite: 0.95, alpha: 1.0).set()
         for day in 0..<dayCount {
             CGRect(x: canvas.minX + CGFloat(day) * dayWidth, y: canvas.minY, width: 1.0, height: canvas.height).fill()
         }
     }
 
-    private func drawHourDelimiters() {
-        NSColor.gridColor.set()
+    open func drawHourDelimiters() {
+        self.hourDelimetersColor.set()
         for hour in 0..<hourCount {
             CGRect(x: contentRect.minX-8.0, y: contentRect.minY + CGFloat(hour) * hourHeight - 0.4,
-                   width: contentRect.width + 8.0, height: 1.0).fill()
+                           width: contentRect.width + 8.0, height: 1.0).fill()
         }
     }
 
-    private func drawCurrentTimeLine() {
+    open func drawCurrentTimeLine() {
         let canvas = contentRect
         let components = sharedCalendar.dateComponents([.hour, .minute], from: Date())
         let minuteCount = Double(hourCount) * 60.0
         let elapsedMinutes = Double(components.hour!-firstHour) * 60.0 + Double(components.minute!)
         let yOrigin = canvas.minY + canvas.height * CGFloat(elapsedMinutes / minuteCount)
-        NSColor.systemRed.setFill()
-        CGRect(x: canvas.minX, y: yOrigin-0.5, width: canvas.width, height: 1.0).fill()
+        self.currentTimeLineColor.setFill()
+        CGRect(x: canvas.minX, y: yOrigin-0.25, width: canvas.width, height: 0.5).fill()
         NSBezierPath(ovalIn: CGRect(x: canvas.minX-2.0, y: yOrigin-2.0, width: 4.0, height: 4.0)).fill()
     }
 
-    private func drawDraggingGuidesIfNeeded() {
-        guard let dView = eventViewBeingDragged else { return }
-        (dView.backgroundColor ?? NSColor.darkGray).setFill()
 
+    open func drawDraggingGuidesIfNeeded() {
+        guard let dV = eventViewBeingDragged else {return}
+        (dV.backgroundColor ?? NSColor.darkGray).setFill()
+
+        func fill(_ xPos: CGFloat, _ yPos: CGFloat, _ wDim: CGFloat, _ hDim: CGFloat) {
+            CGRect(x: xPos, y: yPos, width: wDim, height: hDim).fill()
+        }
         let canvas = contentRect
-        let dragFrame = dView.frame
+        let dragFrame = dV.frame
 
         // Left, right, top and bottom guides
-        CGRect.fill(canvas.minX, dragFrame.midY-1.0, dragFrame.minX-canvas.minX, 2.0)
-        CGRect.fill(dragFrame.maxX, dragFrame.midY-1.0, frame.width-dragFrame.maxX, 2.0)
-        CGRect.fill(dragFrame.midX-1.0, canvas.minY, 2.0, dragFrame.minY-canvas.minY)
-        CGRect.fill(dragFrame.midX-1.0, dragFrame.maxY, 2.0, frame.height-dragFrame.maxY)
+        fill(canvas.minX, dragFrame.midY-1.0, dragFrame.minX-canvas.minX, 2.0)
+        fill(dragFrame.maxX, dragFrame.midY-1.0, frame.width-dragFrame.maxX, 2.0)
+        fill(dragFrame.midX-1.0, canvas.minY, 2.0, dragFrame.minY-canvas.minY)
+        fill(dragFrame.midX-1.0, dragFrame.maxY, 2.0, frame.height-dragFrame.maxY)
 
         let dayWidth = canvas.width / CGFloat(dayCount)
         let offsetPerDay = 1.0/Double(dayCount)
         let startOffset = relativeTimeLocation(for: CGPoint(x: dragFrame.midX, y: dragFrame.minY))
         if startOffset != SCKRelativeTimeLocationInvalid {
-            CGRect.fill(canvas.minX + dayWidth * CGFloat(trunc(startOffset/offsetPerDay)), canvas.minY, dayWidth, 2.0)
+            fill(canvas.minX+dayWidth*CGFloat(trunc(startOffset/offsetPerDay)), canvas.minY, dayWidth, 2.0)
             let startDate = calculateDate(for: startOffset)!
             let sPoint = SCKDayPoint(date: startDate)
-            let ePoint = SCKDayPoint(date: startDate.addingTimeInterval(Double(dView.eventHolder.cachedDuration)*60.0))
+            let ePoint = SCKDayPoint(date: startDate.addingTimeInterval(Double(dV.eventHolder.cachedDuration)*60.0))
             let sLabelText = NSString(format: "%ld:%02ld", sPoint.hour, sPoint.minute)
             let eLabelText = NSString(format: "%ld:%02ld", ePoint.hour, ePoint.minute)
-            let attrs: [NSAttributedString.Key: Any] = [
+            let attrs: [NSAttributedStringKey: Any] = [
                 .foregroundColor: NSColor.darkGray,
                 .font: NSFont.systemFont(ofSize: 12.0)
             ]
@@ -447,7 +942,7 @@ public class SCKGridView: SCKView {
                                     width: eLabelSize.width, height: eLabelSize.height)
             sLabelText.draw(in: sLabelRect, withAttributes: attrs)
             eLabelText.draw(in: eLabelRect, withAttributes: attrs)
-            let durationText = "\(dView.eventHolder.cachedDuration) min"
+            let durationText = "\(dV.eventHolder.cachedDuration) min"
             let dLabelSize = durationText.size(withAttributes: attrs)
             let durationRect = CGRect(x: Constants.HourAreaWidth/2.0-dLabelSize.width/2.0,
                                       y: dragFrame.midY-dLabelSize.height/2.0,
@@ -461,12 +956,16 @@ public class SCKGridView: SCKView {
 
 extension SCKGridView {
 
-    /// A prefix appended to the class name to work as a key to store last zoom level for each subclass in user defaults
+    /// A prefix that appended to the class name works as a user defaults key for
+    /// the last zoom level used by each subclass.
     private static let defaultsZoomKeyPrefix = "MEKZoom"
 
     /// Increases the hour height property if less than the maximum value. Marks the view as needing display.
     func increaseZoomFactor() {
-        processNewHourHeight(hourHeight + 8.0)
+        if hourHeight < Constants.MaxHeightPerHour {
+            hourHeight += 8.0
+            needsDisplay = true
+        }
     }
 
     /// Decreases the hour height property if greater than the minimum value. Marks the view as needing display.
@@ -474,20 +973,17 @@ extension SCKGridView {
         processNewHourHeight(hourHeight - 8.0)
     }
 
-    public override func magnify(with event: NSEvent) {
+    open override func magnify(with event: NSEvent) {
         processNewHourHeight(hourHeight + 16.0 * event.magnification)
     }
 
     /// Increases or decreases the hour height property if greater than the minimum value and less than the maximum
     /// hour height. Marks the view as needing display.
     /// - Parameter targetHeight: The calculated new hour height.
-    private func processNewHourHeight(_ targetHeight: CGFloat) {
-        defer {
-            needsDisplay = true
-            needsUpdateConstraints = true
-        }
+    fileprivate func processNewHourHeight(_ targetHeight: CGFloat) {
         guard targetHeight < Constants.MaxHeightPerHour else {
             hourHeight = Constants.MaxHeightPerHour
+            needsDisplay = true
             return
         }
         let minimumContentHeight = superview!.frame.height - Constants.paddingTop
@@ -496,5 +992,13 @@ extension SCKGridView {
         } else {
             hourHeight = minimumContentHeight / CGFloat(hourCount)
         }
+        needsDisplay = true
+    }
+}
+
+extension SCKGridView {
+
+    open func zoomOut() {
+        self.processNewHourHeight(-1000.0)
     }
 }
